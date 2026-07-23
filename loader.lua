@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Fixed Version (Anti-Kick + Lobby Check)
---// Полный скрипт без разбивки
+--// MM2 AutoFarm - Full Script with Noclip
+--// Полный скрипт без разбивки, с noclip для прохождения сквозь стены
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,7 +7,6 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local TeleportService = game:GetService("TeleportService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -15,7 +14,7 @@ local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- ═══════════════════════════════════════════════════════════════
--- УСИЛЕННЫЙ АНТИ-КИК (многослойный)
+-- УСИЛЕННЫЙ АНТИ-КИК
 -- ═══════════════════════════════════════════════════════════════
 pcall(function()
     local mt = getrawmetatable(game)
@@ -27,7 +26,6 @@ pcall(function()
         mt.__namecall = newcclosure(function(self, ...)
             local method = getnamecallmethod()
             if method == "Kick" or method == "kick" then
-                warn("Kick blocked via __namecall")
                 return nil
             end
             return oldNamecall(self, ...)
@@ -35,7 +33,7 @@ pcall(function()
         
         mt.__index = newcclosure(function(self, key)
             if key == "Kick" or key == "kick" then
-                return function() warn("Kick blocked via __index") end
+                return function() end
             end
             return oldIndex(self, key)
         end)
@@ -44,18 +42,15 @@ pcall(function()
     end
 end)
 
--- Блокировка через hookfunction
 pcall(function()
     local oldKick = hookfunction(player.Kick, function(self, ...)
         if self == player then
-            warn("Kick hooked and blocked")
             return nil
         end
         return oldKick(self, ...)
     end)
 end)
 
--- Блокировка через setconstant (для некоторых эксплойтов)
 pcall(function()
     for _, v in ipairs(getgc()) do
         if type(v) == "function" and getinfo(v).name == "Kick" then
@@ -65,14 +60,44 @@ pcall(function()
 end)
 
 -- ═══════════════════════════════════════════════════════════════
+-- N O C L I P
+-- ═══════════════════════════════════════════════════════════════
+local noclipConnection = nil
+
+local function enableNoclip()
+    if noclipConnection then noclipConnection:Disconnect() end
+    
+    noclipConnection = RunService.Stepped:Connect(function()
+        if not character then return end
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function disableNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+-- ═══════════════════════════════════════════════════════════════
 -- ПРОВЕРКА ЛОББИ / РАУНДА
 -- ═══════════════════════════════════════════════════════════════
 local function isInLobby()
-    -- Проверяем по наличию лобби-элементов
     local lobby = Workspace:FindFirstChild("Lobby") or Workspace:FindFirstChild("lobby")
     if lobby then return true end
     
-    -- Проверяем по GUI лобби
     local pg = player:FindFirstChild("PlayerGui")
     if pg then
         for _, gui in ipairs(pg:GetChildren()) do
@@ -82,7 +107,6 @@ local function isInLobby()
         end
     end
     
-    -- Проверяем по наличию монет (если монет нет — скорее всего лобби)
     local hasCoins = false
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("BasePart") then
@@ -94,22 +118,7 @@ local function isInLobby()
         end
     end
     
-    -- Проверяем статус раунды через RemoteEvents
-    pcall(function()
-        local status = ReplicatedStorage:FindFirstChild("Status") or ReplicatedStorage:FindFirstChild("GameStatus")
-        if status and status.Value:lower():find("lobby") or status.Value:lower():find("intermission") then
-            return true
-        end
-    end)
-    
     return not hasCoins
-end
-
-local function waitForRound()
-    while isInLobby() do
-        wait(1)
-    end
-    wait(2) -- Даём время на загрузку монет
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -166,7 +175,8 @@ local CONFIG = {
     SPEED = 35,
     JUMP = 50,
     ESP_ENABLED = true,
-    AFK_INTERVAL = 15, -- Каждые 15 сек симулируем активность
+    AFK_INTERVAL = 15,
+    NOCLIP = true,
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -283,7 +293,7 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ
+-- ДВИЖЕНИЕ (С N O C L I P)
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
@@ -373,7 +383,7 @@ local function collectCoin(coin)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- АНТИ-AFK (УСИЛЕННЫЙ)
+-- АНТИ-AFK
 -- ═══════════════════════════════════════════════════════════════
 local function startAntiAfk()
     antiAfkConnection = RunService.Heartbeat:Connect(function(dt)
@@ -381,20 +391,17 @@ local function startAntiAfk()
         
         afkTimer = afkTimer + dt
         
-        -- Симулируем движение мыши каждые 5 сек
         if afkTimer >= 5 then
             afkTimer = 0
             VirtualInputManager:SendMouseMoveEvent(math.random(-10, 10), math.random(-10, 10), game)
         end
         
-        -- Случайный прыжок
         if math.random(1, 300) == 1 then
             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
             wait(0.1)
             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
         end
         
-        -- Случайное движение WASD
         if math.random(1, 200) == 1 then
             local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D}
             local key = keys[math.random(1, 4)]
@@ -433,7 +440,6 @@ local function farmLoop()
     while isRunning do
         if not isRunning then break end
         
-        -- Проверяем лобби
         if isInLobby() then
             statusLabel.Text = "LOBBY"
             statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
@@ -510,6 +516,10 @@ local function startFarm()
     statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
     stroke.Color = Color3.fromRGB(50, 255, 50)
     
+    if CONFIG.NOCLIP then
+        enableNoclip()
+    end
+    
     startAntiAfk()
     applySpeed()
     
@@ -521,6 +531,7 @@ end
 local function stopFarm()
     isRunning = false
     stopAntiAfk()
+    disableNoclip()
     
     toggleButton.Text = "▶"
     statusLabel.Text = "OFF"
@@ -596,6 +607,9 @@ player.CharacterAdded:Connect(function(newChar)
     character = newChar
     humanoid = newChar:WaitForChild("Humanoid")
     humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
+    if isRunning and CONFIG.NOCLIP then
+        enableNoclip()
+    end
     if isRunning then
         applySpeed()
     end
@@ -604,4 +618,4 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm Fixed загружен. Нажми ▶ для старта.")
+print("MM2 AutoFarm с Noclip загружен. Нажми ▶ для старта.")
