@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Full Script
---// Версия без разбивки, оптимизированная под планшет
+--// MM2 AutoFarm - Fixed Version (Anti-Kick + Lobby Check)
+--// Полный скрипт без разбивки
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,13 +7,110 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local PathfindingService = game:GetService("PathfindingService")
-local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- ═══════════════════════════════════════════════════════════════
+-- УСИЛЕННЫЙ АНТИ-КИК (многослойный)
+-- ═══════════════════════════════════════════════════════════════
+pcall(function()
+    local mt = getrawmetatable(game)
+    if mt then
+        local oldNamecall = mt.__namecall
+        local oldIndex = mt.__index
+        setreadonly(mt, false)
+        
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if method == "Kick" or method == "kick" then
+                warn("Kick blocked via __namecall")
+                return nil
+            end
+            return oldNamecall(self, ...)
+        end)
+        
+        mt.__index = newcclosure(function(self, key)
+            if key == "Kick" or key == "kick" then
+                return function() warn("Kick blocked via __index") end
+            end
+            return oldIndex(self, key)
+        end)
+        
+        setreadonly(mt, true)
+    end
+end)
+
+-- Блокировка через hookfunction
+pcall(function()
+    local oldKick = hookfunction(player.Kick, function(self, ...)
+        if self == player then
+            warn("Kick hooked and blocked")
+            return nil
+        end
+        return oldKick(self, ...)
+    end)
+end)
+
+-- Блокировка через setconstant (для некоторых эксплойтов)
+pcall(function()
+    for _, v in ipairs(getgc()) do
+        if type(v) == "function" and getinfo(v).name == "Kick" then
+            hookfunction(v, function() return nil end)
+        end
+    end
+end)
+
+-- ═══════════════════════════════════════════════════════════════
+-- ПРОВЕРКА ЛОББИ / РАУНДА
+-- ═══════════════════════════════════════════════════════════════
+local function isInLobby()
+    -- Проверяем по наличию лобби-элементов
+    local lobby = Workspace:FindFirstChild("Lobby") or Workspace:FindFirstChild("lobby")
+    if lobby then return true end
+    
+    -- Проверяем по GUI лобби
+    local pg = player:FindFirstChild("PlayerGui")
+    if pg then
+        for _, gui in ipairs(pg:GetChildren()) do
+            if gui.Name:lower():find("lobby") or gui.Name:lower():find("intermission") then
+                return true
+            end
+        end
+    end
+    
+    -- Проверяем по наличию монет (если монет нет — скорее всего лобби)
+    local hasCoins = false
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local n = obj.Name:lower()
+            if n:find("coin") or n:find("diamond") then
+                hasCoins = true
+                break
+            end
+        end
+    end
+    
+    -- Проверяем статус раунды через RemoteEvents
+    pcall(function()
+        local status = ReplicatedStorage:FindFirstChild("Status") or ReplicatedStorage:FindFirstChild("GameStatus")
+        if status and status.Value:lower():find("lobby") or status.Value:lower():find("intermission") then
+            return true
+        end
+    end)
+    
+    return not hasCoins
+end
+
+local function waitForRound()
+    while isInLobby() do
+        wait(1)
+    end
+    wait(2) -- Даём время на загрузку монет
+end
 
 -- ═══════════════════════════════════════════════════════════════
 -- GUI КНОПКА
@@ -64,11 +161,12 @@ statusLabel.Parent = mainFrame
 local CONFIG = {
     COIN_TELEPORT_DIST = 6,
     SAFE_DIST_KILLER = 20,
-    COOLDOWN = 0.08,
+    COOLDOWN = 0.1,
     MAX_COINS = 50,
     SPEED = 35,
     JUMP = 50,
     ESP_ENABLED = true,
+    AFK_INTERVAL = 15, -- Каждые 15 сек симулируем активность
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -78,6 +176,7 @@ local isRunning = false
 local espFolder = nil
 local mainConnection = nil
 local antiAfkConnection = nil
+local afkTimer = 0
 
 -- ═══════════════════════════════════════════════════════════════
 -- УТИЛИТЫ
@@ -97,9 +196,9 @@ end
 local function getMurderer()
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= player then
-            local backpack = p:FindFirstChild("Backpack")
+            local bp = p:FindFirstChild("Backpack")
             local char = p.Character
-            if (backpack and backpack:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
+            if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
                 return p
             end
         end
@@ -175,7 +274,6 @@ local function findCoins()
         end
     end
     
-    -- Сортировка по близости
     table.sort(coins, function(a, b)
         if not a or not b then return false end
         return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
@@ -215,7 +313,6 @@ local function collectCoin(coin)
     local coinPos = coin.Position
     local murderer = getMurderer()
     
-    -- Проверка убийцы
     if murderer and isAlive(murderer) then
         local mPos = murderer.Character.HumanoidRootPart.Position
         if getDistance(coinPos, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -223,7 +320,6 @@ local function collectCoin(coin)
         end
     end
     
-    -- Двигаемся к монете
     local dist = getDistance(humanoidRootPart.Position, coinPos)
     if dist > CONFIG.COIN_TELEPORT_DIST then
         tweenTo(coinPos)
@@ -233,10 +329,8 @@ local function collectCoin(coin)
     
     wait(0.05)
     
-    -- Сбор через разные методы
     local success = false
     
-    -- Метод 1: TouchInterest
     pcall(function()
         firetouchinterest(humanoidRootPart, coin, 0)
         wait(0.03)
@@ -244,7 +338,6 @@ local function collectCoin(coin)
         success = true
     end)
     
-    -- Метод 2: ProximityPrompt
     pcall(function()
         local prompt = coin:FindFirstChildOfClass("ProximityPrompt")
         if prompt then
@@ -253,7 +346,6 @@ local function collectCoin(coin)
         end
     end)
     
-    -- Метод 3: RemoteEvents (MM2 специфично)
     pcall(function()
         local remotes = ReplicatedStorage:FindFirstChild("Remotes")
         if remotes then
@@ -265,7 +357,6 @@ local function collectCoin(coin)
         end
     end)
     
-    -- Метод 4: Альтернативные ремоты
     pcall(function()
         local rp = ReplicatedStorage:FindFirstChild("RF") or ReplicatedStorage:FindFirstChild("RE")
         if rp then
@@ -282,12 +373,35 @@ local function collectCoin(coin)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- АНТИ-AFK
+-- АНТИ-AFK (УСИЛЕННЫЙ)
 -- ═══════════════════════════════════════════════════════════════
 local function startAntiAfk()
-    antiAfkConnection = RunService.Heartbeat:Connect(function()
+    antiAfkConnection = RunService.Heartbeat:Connect(function(dt)
         if not isRunning then return end
-        VirtualInputManager:SendMouseMoveEvent(math.random(-5, 5), math.random(-5, 5), game)
+        
+        afkTimer = afkTimer + dt
+        
+        -- Симулируем движение мыши каждые 5 сек
+        if afkTimer >= 5 then
+            afkTimer = 0
+            VirtualInputManager:SendMouseMoveEvent(math.random(-10, 10), math.random(-10, 10), game)
+        end
+        
+        -- Случайный прыжок
+        if math.random(1, 300) == 1 then
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            wait(0.1)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        end
+        
+        -- Случайное движение WASD
+        if math.random(1, 200) == 1 then
+            local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D}
+            local key = keys[math.random(1, 4)]
+            VirtualInputManager:SendKeyEvent(true, key, false, game)
+            wait(0.2)
+            VirtualInputManager:SendKeyEvent(false, key, false, game)
+        end
     end)
 end
 
@@ -319,10 +433,20 @@ local function farmLoop()
     while isRunning do
         if not isRunning then break end
         
+        -- Проверяем лобби
+        if isInLobby() then
+            statusLabel.Text = "LOBBY"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+            wait(2)
+            continue
+        end
+        
+        statusLabel.Text = "ON"
+        statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+        
         local role = getRole()
         
         if role == "Murderer" then
-            -- Если убийца — просто ждём
             wait(1)
             continue
         end
@@ -344,7 +468,6 @@ local function farmLoop()
             end
             if processed[coin] then continue end
             
-            -- Проверка убийцы
             if murderer and isAlive(murderer) then
                 local mPos = murderer.Character.HumanoidRootPart.Position
                 if getDistance(coin.Position, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -353,12 +476,10 @@ local function farmLoop()
                 end
             end
             
-            -- ESP
             if CONFIG.ESP_ENABLED then
                 addESP(coin, "💰")
             end
             
-            -- Сбор
             if collectCoin(coin) then
                 collected = collected + 1
                 processed[coin] = true
@@ -367,7 +488,6 @@ local function farmLoop()
             applySpeed()
         end
         
-        -- Очистка устаревших
         for coin, _ in pairs(processed) do
             if not coin or not coin.Parent then
                 processed[coin] = nil
@@ -482,22 +602,6 @@ player.CharacterAdded:Connect(function(newChar)
 end)
 
 -- ═══════════════════════════════════════════════════════════════
--- ОБХОД КИКА
--- ═══════════════════════════════════════════════════════════════
-pcall(function()
-    local mt = getrawmetatable(game)
-    local old = mt.__namecall
-    setreadonly(mt, false)
-    mt.__namecall = newcclosure(function(self, ...)
-        if getnamecallmethod() == "Kick" then
-            return nil
-        end
-        return old(self, ...)
-    end)
-    setreadonly(mt, true)
-end)
-
--- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm загружен. Нажми ▶ для старта. Удерживай 1.5с для закрытия.")
+print("MM2 AutoFarm Fixed загружен. Нажми ▶ для старта.")
