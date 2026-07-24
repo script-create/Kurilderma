@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Relaxed Filter
---// Ослабленная проверка монет
+--// MM2 AutoFarm - Real Coins Only
+--// Ищет только крупные монеты, исключает мелкие иконки
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -245,21 +245,38 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: РЕАЛЬНАЯ ЛИ МОНЕТА? (ОСЛАБЛЕННАЯ)
+-- ПРОВЕРКА: РЕАЛЬНАЯ МОНЕТА (ТОЛЬКО КРУПНЫЕ ОБЪЕКТЫ)
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
     if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
     
-    -- Только базовые проверки
+    -- РАЗМЕР: только крупные (монеты ~2-4 studs, иконки < 0.5)
+    local size = obj.Size
+    local maxSize = math.max(size.X, size.Y, size.Z)
+    local minSize = math.min(size.X, size.Y, size.Z)
+    
+    -- Монеты в MM2 обычно 1.5-3 studs, исключаем мелкие иконки
+    if maxSize < 1 or maxSize > 8 then
+        return false
+    end
+    
+    -- Не слишком тонкие (иконки плоские)
+    if minSize < 0.3 then
+        return false
+    end
+    
+    -- Не полностью прозрачная
     if obj.Transparency >= 1 then
         return false
     end
     
+    -- Не в магазине
     if isShopItem(obj) then
         return false
     end
     
+    -- Не часть персонажа
     if obj:IsDescendantOf(character) then
         return false
     end
@@ -268,7 +285,7 @@ local function isRealCoin(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (ОСЛАБЛЕННЫЙ)
+-- ПОИСК МОНЕТ (ТОЛЬКО КРУПНЫЕ)
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
@@ -632,5 +649,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm Relaxed загружен.")
-print("Фильтр ослаблен: только прозрачность, магазин, персонаж")
+print("MM2 AutoFarm RealCoins загружен.")
+print("Размер монет: 1-8 studs | Исключены иконки < 1 stud")
