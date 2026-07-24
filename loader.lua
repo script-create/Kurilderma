@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Coin Bag Counter + Stop on Death + Max 50
---// Считает по мешку монет, стоп после смерти, 50 макс, без перетаскивания
+--// MM2 AutoFarm - Server Data Counter
+--// Счёт по данным сервера, стоп после смерти, 50 макс
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -83,7 +83,7 @@ local function disableNoclip()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- GUI КНОПКА (БЕЗ ПЕРЕТАСКИВАНИЯ)
+-- GUI КНОПКА
 -- ═══════════════════════════════════════════════════════════════
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MM2AutoFarmGUI"
@@ -147,43 +147,67 @@ local isRunning = false
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
+local serverCoinCount = 0
+local startServerCoins = 0
 
 -- ═══════════════════════════════════════════════════════════════
--- СЧЁТЧИК МОНЕТ ПО МЕШКУ (GUI)
+-- СЧЁТЧИК ПО ДАННЫМ СЕРВЕРА
 -- ═══════════════════════════════════════════════════════════════
-local function getCoinCount()
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return 0 end
-    
-    -- Ищем мешок с монетами (обычно внизу экрана)
-    for _, gui in ipairs(pg:GetDescendants()) do
-        if gui:IsA("TextLabel") or gui:IsA("TextButton") then
-            local text = gui.Text
-            -- Ищем число рядом с иконкой монеты или $
-            if text and text:find("%d+") then
-                local num = tonumber(text:match("%d+"))
-                if num and num >= 0 and num <= 100 then
-                    return num
+local function getServerCoinData()
+    -- Метод 1: PlayerData в ReplicatedStorage
+    pcall(function()
+        local data = ReplicatedStorage:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("Data")
+        if data then
+            local plrData = data:FindFirstChild(player.Name) or data:FindFirstChild(tostring(player.UserId))
+            if plrData then
+                local coins = plrData:FindFirstChild("Coins") or plrData:FindFirstChild("coins") or plrData:FindFirstChild("Money")
+                if coins and coins:IsA("IntValue") or coins:IsA("NumberValue") then
+                    return coins.Value
                 end
             end
         end
-    end
+    end)
     
-    -- Альтернатива: ищем специфичные имена GUI монет
-    for _, gui in ipairs(pg:GetDescendants()) do
-        if gui.Name:lower():find("coin") or gui.Name:lower():find("money") or gui.Name:lower():find("bag") then
-            if gui:IsA("TextLabel") and gui.Text then
-                local num = tonumber(gui.Text:match("%d+"))
-                if num then return num end
+    -- Метод 2: Stats в player
+    pcall(function()
+        local stats = player:FindFirstChild("leaderstats") or player:FindFirstChild("Stats")
+        if stats then
+            local coins = stats:FindFirstChild("Coins") or stats:FindFirstChild("coins") or stats:FindFirstChild("Money")
+            if coins and coins:IsA("IntValue") or coins:IsA("NumberValue") then
+                return coins.Value
             end
         end
-    end
+    end)
+    
+    -- Метод 3: Values в Workspace
+    pcall(function()
+        local values = Workspace:FindFirstChild("Values") or Workspace:FindFirstChild("GameValues")
+        if values then
+            local coins = values:FindFirstChild("Coins") or values:FindFirstChild("TotalCoins")
+            if coins and coins:IsA("IntValue") or coins:IsA("NumberValue") then
+                return coins.Value
+            end
+        end
+    end)
+    
+    -- Метод 4: Attributes на player
+    pcall(function()
+        local attr = player:GetAttribute("Coins") or player:GetAttribute("coins") or player:GetAttribute("Money")
+        if attr then
+            return attr
+        end
+    end)
+    
+    -- Метод 5: Attributes на character
+    pcall(function()
+        local attr = character:GetAttribute("Coins") or character:GetAttribute("coins")
+        if attr then
+            return attr
+        end
+    end)
     
     return 0
 end
-
-local startCoinCount = 0
-local lastCoinCount = 0
 
 -- ═══════════════════════════════════════════════════════════════
 -- УТИЛИТЫ
@@ -411,16 +435,16 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (СЧЁТ ПО МЕШКУ + СТОП ПОСЛЕ СМЕРТИ + 50 МАКС)
+-- ГЛАВНЫЙ ЦИКЛ (СЧЁТ ПО СЕРВЕРУ + СТОП ПОСЛЕ СМЕРТИ + 50 МАКС)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
     local processed = {}
     
-    -- Запоминаем стартовое количество монет
-    startCoinCount = getCoinCount()
-    lastCoinCount = startCoinCount
-    print("Стартовый счёт монет: " .. startCoinCount)
+    -- Запоминаем стартовое значение с сервера
+    startServerCoins = getServerCoinData()
+    serverCoinCount = startServerCoins
+    print("Стартовый счёт сервера: " .. startServerCoins)
     
     while isRunning do
         if not isRunning then break end
@@ -432,9 +456,9 @@ local function farmLoop()
             return
         end
         
-        -- ПРОВЕРКА СЧЁТЧИКА МОНЕТ
-        local currentCoins = getCoinCount()
-        local coinsEarned = currentCoins - startCoinCount
+        -- ПРОВЕРКА СЧЁТЧИКА СЕРВЕРА
+        local currentServerCoins = getServerCoinData()
+        local coinsEarned = currentServerCoins - startServerCoins
         
         -- Обновляем статус
         statusLabel.Text = tostring(coinsEarned) .. "/50"
@@ -446,7 +470,7 @@ local function farmLoop()
             return
         end
         
-        lastCoinCount = currentCoins
+        serverCoinCount = currentServerCoins
         
         local allCoins = findCoins()
         local murderer = getMurderer()
@@ -477,9 +501,9 @@ local function farmLoop()
                 return
             end
             
-            -- ПРОВЕРКА СЧЁТЧИКА
-            local current = getCoinCount()
-            local earned = current - startCoinCount
+            -- ПРОВЕРКА СЧЁТЧИКА СЕРВЕРА
+            local current = getServerCoinData()
+            local earned = current - startServerCoins
             statusLabel.Text = tostring(earned) .. "/50"
             
             if earned >= CONFIG.MAX_COINS then
@@ -524,8 +548,8 @@ local function startFarm()
     if isRunning then return end
     isRunning = true
     
-    startCoinCount = getCoinCount()
-    lastCoinCount = startCoinCount
+    startServerCoins = getServerCoinData()
+    serverCoinCount = startServerCoins
     
     toggleButton.Text = "⏸"
     statusLabel.Text = "0/50"
@@ -561,7 +585,7 @@ local function stopFarm()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- КЛИК ПО КНОПКЕ (БЕЗ ПЕРЕТАСКИВАНИЯ)
+-- КЛИК ПО КНОПКЕ
 -- ═══════════════════════════════════════════════════════════════
 toggleButton.MouseButton1Click:Connect(function()
     if isRunning then
@@ -605,5 +629,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm BagCounter загружен.")
-print("Счёт по мешку | Стоп после смерти | 50 макс | Кнопка фиксирована")
+print("MM2 AutoFarm ServerCounter загружен.")
+print("Счёт по данным сервера | Стоп после смерти | 50 макс")
