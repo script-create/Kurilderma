@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Phantom Coin Fix
---// Проверяет что монета реальная: видимая, с TouchInterest, активная
+--// MM2 AutoFarm - Relaxed Filter
+--// Ослабленная проверка монет
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -245,45 +245,21 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: РЕАЛЬНАЯ ЛИ МОНЕТА? (НОВОЕ - ФИКС ФАНТОМОВ)
+-- ПРОВЕРКА: РЕАЛЬНАЯ ЛИ МОНЕТА? (ОСЛАБЛЕННАЯ)
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
     if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
     
-    -- Должна быть видимая (не полностью прозрачная)
-    if obj.Transparency >= 0.9 then
+    -- Только базовые проверки
+    if obj.Transparency >= 1 then
         return false
     end
     
-    -- Должна иметь TouchInterest (иначе нельзя собрать)
-    if not obj:FindFirstChild("TouchInterest") then
-        -- Или ProximityPrompt
-        if not obj:FindFirstChildOfClass("ProximityPrompt") then
-            return false
-        end
-    end
-    
-    -- Не должна быть в магазине
     if isShopItem(obj) then
         return false
     end
     
-    -- Должна быть не слишком маленькая и не слишком большая
-    local size = obj.Size
-    if size.X > 10 or size.Y > 10 or size.Z > 10 then
-        return false
-    end
-    if size.X < 0.1 or size.Y < 0.1 or size.Z < 0.1 then
-        return false
-    end
-    
-    -- Должна быть на нормальной высоте (не под картой)
-    if obj.Position.Y < -50 then
-        return false
-    end
-    
-    -- Проверка: не является ли частью персонажа
     if obj:IsDescendantOf(character) then
         return false
     end
@@ -292,7 +268,7 @@ local function isRealCoin(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (С ПРОВЕРКОЙ НА РЕАЛЬНОСТЬ)
+-- ПОИСК МОНЕТ (ОСЛАБЛЕННЫЙ)
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
@@ -302,23 +278,23 @@ local function findCoins()
         if not checked[obj] then
             checked[obj] = true
             
-            -- Сначала проверяем что это реальная монета
             if not isRealCoin(obj) then
                 continue
             end
             
             local n = obj.Name:lower()
             
-            -- Точные совпадения с монетами
+            -- Широкий поиск
             if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or 
                n:find("loot") or n:find("candy") or n:find("gold") or n:find("money") or
-               n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") then
+               n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") or
+               n:find("part") or n:find("mesh") then
                 table.insert(coins, obj)
             end
         end
     end
     
-    -- Специфичные папки (тоже с проверкой)
+    -- Специфичные папки
     local folders = {
         "CoinSpawns", "Coins", "Loot", "Drops", "Map", 
         "SpawnedCoins", "GameCoins", "Collectibles",
@@ -374,7 +350,6 @@ end
 local function collectCoin(coin)
     if not coin or not coin.Parent then return false end
     
-    -- Ещё раз проверяем перед сбором
     if not isRealCoin(coin) then
         return false
     end
@@ -657,5 +632,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm PhantomFix загружен.")
-print("Фильтр: видимость, TouchInterest, размер, высота, магазин")
+print("MM2 AutoFarm Relaxed загружен.")
+print("Фильтр ослаблен: только прозрачность, магазин, персонаж")
