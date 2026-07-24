@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Debug Version (Lobby check removed)
---// Полный скрипт без проверки лобби, с отладкой
+--// MM2 AutoFarm - Full Script with Noclip + Low Speed + Near Coins Only
+--// Полный скрипт без разбивки, с noclip, медленная скорость, только ближайшие монеты
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -126,17 +126,19 @@ statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
 -- ═══════════════════════════════════════════════════════════════
--- КОНФИГ
+-- КОНФИГ (ИЗМЕНЕНО: медленная скорость, только ближайшие)
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
     COIN_TELEPORT_DIST = 6,
     SAFE_DIST_KILLER = 20,
-    COOLDOWN = 0.1,
+    COOLDOWN = 0.15,
     MAX_COINS = 50,
-    SPEED = 35,
+    SPEED = 16,           -- БЫЛО 35, СТАЛО 16 (нормальная скорость)
     JUMP = 50,
     ESP_ENABLED = true,
     NOCLIP = true,
+    NEAR_RADIUS = 60,     -- НОВОЕ: собирать только в радиусе 60 студов
+    MAX_COINS_PER_CYCLE = 5, -- НОВОЕ: макс 5 монет за цикл, потом перерыв
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -226,13 +228,11 @@ local function findCoins()
     local checked = {}
     local debugNames = {}
     
-    -- Сканируем ВСЕ BasePart в Workspace
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and not checked[obj] then
             checked[obj] = true
             local n = obj.Name:lower()
             
-            -- Широкий поиск: любая маленькая деталька которая может быть монетой
             if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or 
                n:find("loot") or n:find("candy") or n:find("gold") or n:find("money") or
                n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") then
@@ -240,13 +240,10 @@ local function findCoins()
                 table.insert(debugNames, obj.Name)
             end
             
-            -- Также проверяем по размеру (монеты обычно маленькие)
             local size = obj.Size
             if size.X < 3 and size.Y < 3 and size.Z < 3 and size.X > 0.1 then
                 if n:find("part") or n:find("mesh") or obj:IsA("MeshPart") then
-                    -- Возможно монета без понятного имени
                     if not table.find(coins, obj) then
-                        -- Проверим есть ли у неё специфичные свойства
                         if obj:FindFirstChild("TouchInterest") or obj:FindFirstChildOfClass("ProximityPrompt") then
                             table.insert(coins, obj)
                             table.insert(debugNames, "UNKNOWN:" .. obj.Name)
@@ -257,7 +254,6 @@ local function findCoins()
         end
     end
     
-    -- Специфичные папки MM2 (все варианты)
     local folders = {
         "CoinSpawns", "Coins", "Loot", "Drops", "Map", 
         "SpawnedCoins", "GameCoins", "Collectibles",
@@ -276,13 +272,11 @@ local function findCoins()
         end
     end
     
-    -- Отладка: выводим что нашли
     if #debugNames > 0 then
         print("Найдено объектов: " .. #debugNames)
         print("Имена: " .. table.concat(debugNames, ", "))
     else
         print("ОБЪЕКТЫ НЕ НАЙДЕНЫ! Сканирую все MeshPart...")
-        -- Если ничего не нашли — выводим ВСЕ MeshPart для анализа
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("MeshPart") and obj.Size.X < 5 then
                 print("MeshPart: " .. obj.Name .. " | Size: " .. tostring(obj.Size) .. " | Pos: " .. tostring(obj.Position))
@@ -290,7 +284,7 @@ local function findCoins()
         end
     end
     
-    -- Сортировка по близости
+    -- СОРТИРОВКА ПО БЛИЗОСТИ (ВАЖНО)
     table.sort(coins, function(a, b)
         if not a or not b then return false end
         return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
@@ -300,7 +294,7 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ
+-- ДВИЖЕНИЕ (МЕДЛЕННОЕ)
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
@@ -314,7 +308,8 @@ local function tweenTo(pos)
         tpTo(pos)
         return
     end
-    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 40, 1.5), Enum.EasingStyle.Linear), {
+    -- МЕДЛЕННЫЙ ТВИН: скорость / 15 вместо / 40
+    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 15, 3), Enum.EasingStyle.Linear), {
         CFrame = CFrame.new(pos.X, pos.Y + 4, pos.Z)
     })
     tween:Play()
@@ -418,17 +413,17 @@ local function stopAntiAfk()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- SPEED BOOST
+-- SPEED BOOST (МЕДЛЕННЫЙ)
 -- ═══════════════════════════════════════════════════════════════
 local function applySpeed()
     if humanoid then
-        humanoid.WalkSpeed = CONFIG.SPEED
+        humanoid.WalkSpeed = CONFIG.SPEED  -- 16 вместо 35
         humanoid.JumpPower = CONFIG.JUMP
     end
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (БЕЗ ПРОВЕРКИ ЛОББИ)
+-- ГЛАВНЫЙ ЦИКЛ (ТОЛЬКО БЛИЖАЙШИЕ МОНЕТЫ)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
@@ -448,22 +443,43 @@ local function farmLoop()
             continue
         end
         
-        local coins = findCoins()
+        local allCoins = findCoins()
         local murderer = getMurderer()
         
+        -- ФИЛЬТРУЕМ ТОЛЬКО БЛИЖАЙШИЕ (НОВОЕ)
+        local coins = {}
+        for _, coin in ipairs(allCoins) do
+            local dist = getDistance(humanoidRootPart.Position, coin.Position)
+            if dist <= CONFIG.NEAR_RADIUS then
+                table.insert(coins, coin)
+            end
+            -- Берём максимум 10 ближайших
+            if #coins >= 10 then
+                break
+            end
+        end
+        
         if #coins == 0 then
-            print("Монеты не найдены, жду...")
+            print("Ближайшие монеты не найдены, жду...")
             wait(2)
             continue
         end
         
-        print("Найдено монет: " .. #coins)
+        print("Ближайших монет: " .. #coins .. " (радиус " .. CONFIG.NEAR_RADIUS .. ")")
+        
+        -- Собираем только MAX_COINS_PER_CYCLE за раз
+        local cycleCount = 0
         
         for _, coin in ipairs(coins) do
             if not isRunning then break end
             if collected >= CONFIG.MAX_COINS then
                 collected = 0
                 wait(2)
+                break
+            end
+            if cycleCount >= CONFIG.MAX_COINS_PER_CYCLE then
+                print("Цикл завершён, перерыв...")
+                wait(3)
                 break
             end
             if processed[coin] then continue end
@@ -482,8 +498,9 @@ local function farmLoop()
             
             if collectCoin(coin) then
                 collected = collected + 1
+                cycleCount = cycleCount + 1
                 processed[coin] = true
-                print("Собрано: " .. collected)
+                print("Собрано: " .. collected .. " (цикл: " .. cycleCount .. ")")
             end
             
             applySpeed()
@@ -495,7 +512,7 @@ local function farmLoop()
             end
         end
         
-        wait(0.1)
+        wait(0.5) -- Увеличенная задержка между циклами
     end
 end
 
@@ -613,5 +630,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm Debug загружен.")
-print("Нажми ▶ и смотри в консоль (F9) — там будут имена найденных объектов.")
+print("MM2 AutoFarm LowSpeed загружен.")
+print("Скорость: " .. CONFIG.SPEED .. " | Радиус: " .. CONFIG.NEAR_RADIUS .. " | Монет за цикл: " .. CONFIG.MAX_COINS_PER_CYCLE)
