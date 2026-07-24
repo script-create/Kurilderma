@@ -1,5 +1,5 @@
---// MM2 AutoFarm - All Roles + Center Touch
---// Фармит за все роли, касается центра монетки, без чека магазина
+--// MM2 AutoFarm - Stop on Death + Max 50 Coins + No Drag
+--// Останавливается после смерти, 50 монет макс, кнопка фиксирована
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -83,7 +83,7 @@ local function disableNoclip()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- GUI КНОПКА
+-- GUI КНОПКА (БЕЗ ПЕРЕТАСКИВАНИЯ)
 -- ═══════════════════════════════════════════════════════════════
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MM2AutoFarmGUI"
@@ -137,6 +137,7 @@ local CONFIG = {
     ESP_ENABLED = true,
     NOCLIP = true,
     NEAR_RADIUS = 100,
+    MAX_COINS = 50,
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -146,6 +147,7 @@ local isRunning = false
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
+local coinsCollected = 0
 
 -- ═══════════════════════════════════════════════════════════════
 -- УТИЛИТЫ
@@ -208,7 +210,7 @@ local function addESP(part, text)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА МОНЕТЫ (БЕЗ ЧЕКА МАГАЗИНА)
+-- ПРОВЕРКА МОНЕТЫ
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
@@ -247,11 +249,10 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ (В ЦЕНТР МОНЕТКИ)
+-- ДВИЖЕНИЕ
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
-    -- Телепорт точно в центр монетки, без +4 по Y
     humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
@@ -262,7 +263,6 @@ local function tweenTo(pos)
         tpTo(pos)
         return
     end
-    -- Твин точно в центр монетки
     local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 2), Enum.EasingStyle.Linear), {
         CFrame = CFrame.new(pos)
     })
@@ -271,7 +271,7 @@ local function tweenTo(pos)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- СБОР МОНЕТЫ (ЦЕНТР МОНЕТКИ)
+-- СБОР МОНЕТЫ
 -- ═══════════════════════════════════════════════════════════════
 local function collectCoin(coin)
     if not coin or not coin.Parent then return false end
@@ -283,7 +283,6 @@ local function collectCoin(coin)
     local coinPos = coin.Position
     local murderer = getMurderer()
     
-    -- Убийца рядом — пропускаем
     if murderer and isAlive(murderer) then
         local mPos = murderer.Character.HumanoidRootPart.Position
         if getDistance(coinPos, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -291,7 +290,6 @@ local function collectCoin(coin)
         end
     end
     
-    -- Двигаемся В ЦЕНТР монетки
     local dist = getDistance(humanoidRootPart.Position, coinPos)
     if dist > CONFIG.COIN_TELEPORT_DIST then
         tweenTo(coinPos)
@@ -303,7 +301,6 @@ local function collectCoin(coin)
     
     local success = false
     
-    -- Касаемся центра монетки
     pcall(function()
         firetouchinterest(humanoidRootPart, coin, 0)
         wait(0.03)
@@ -378,19 +375,32 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (ВСЕ РОЛИ)
+-- ГЛАВНЫЙ ЦИКЛ (СТОП ПОСЛЕ СМЕРТИ + 50 МОНЕТ)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
     local processed = {}
+    coinsCollected = 0
     
     while isRunning do
         if not isRunning then break end
         
-        statusLabel.Text = "ON"
-        statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+        -- СТОП ЕСЛИ УМЕР
+        if not isAlive(player) then
+            print("Умер — остановка фарма")
+            stopFarm()
+            return
+        end
         
-        -- УБРАН ЧЕК РОЛИ — ФАРМИТ ЗА ВСЕХ
+        -- СТОП ЕСЛИ 50 МОНЕТ
+        if coinsCollected >= CONFIG.MAX_COINS then
+            print("Собрано " .. CONFIG.MAX_COINS .. " монет — остановка")
+            stopFarm()
+            return
+        end
+        
+        statusLabel.Text = tostring(coinsCollected) .. "/50"
+        statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
         
         local allCoins = findCoins()
         local murderer = getMurderer()
@@ -413,9 +423,23 @@ local function farmLoop()
         
         for _, coin in ipairs(coins) do
             if not isRunning then break end
+            
+            -- СТОП ЕСЛИ УМЕР
+            if not isAlive(player) then
+                print("Умер во время сбора — остановка")
+                stopFarm()
+                return
+            end
+            
+            -- СТОП ЕСЛИ 50 МОНЕТ
+            if coinsCollected >= CONFIG.MAX_COINS then
+                print("Собрано " .. CONFIG.MAX_COINS .. " монет — остановка")
+                stopFarm()
+                return
+            end
+            
             if processed[coin] then continue end
             
-            -- Убийца рядом с монетой — пропускаем
             if murderer and isAlive(murderer) then
                 local mPos = murderer.Character.HumanoidRootPart.Position
                 if getDistance(coin.Position, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -428,7 +452,11 @@ local function farmLoop()
                 addESP(coin, "💰")
             end
             
-            collectCoin(coin)
+            if collectCoin(coin) then
+                coinsCollected = coinsCollected + 1
+                print("Собрано: " .. coinsCollected .. "/50")
+            end
+            
             processed[coin] = true
             applySpeed()
         end
@@ -449,9 +477,10 @@ end
 local function startFarm()
     if isRunning then return end
     isRunning = true
+    coinsCollected = 0
     
     toggleButton.Text = "⏸"
-    statusLabel.Text = "ON"
+    statusLabel.Text = "0/50"
     statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
     stroke.Color = Color3.fromRGB(50, 255, 50)
     
@@ -484,35 +513,7 @@ local function stopFarm()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПЕРЕТАСКИВАНИЕ КНОПКИ
--- ═══════════════════════════════════════════════════════════════
-local dragging = false
-local dragStart = nil
-local startPos = nil
-
-mainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-    end
-end)
-
-mainFrame.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-mainFrame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- ═══════════════════════════════════════════════════════════════
--- КЛИК ПО КНОПКЕ
+-- КЛИК ПО КНОПКЕ (БЕЗ ПЕРЕТАСКИВАНИЯ)
 -- ═══════════════════════════════════════════════════════════════
 toggleButton.MouseButton1Click:Connect(function()
     if isRunning then
@@ -546,17 +547,16 @@ player.CharacterAdded:Connect(function(newChar)
     character = newChar
     humanoid = newChar:WaitForChild("Humanoid")
     humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
-    if isRunning and CONFIG.NOCLIP then
-        enableNoclip()
-    end
+    
+    -- Остановка при респавне (смерть)
     if isRunning then
-        applySpeed()
+        print("Респавн — остановка фарма")
+        stopFarm()
     end
 end)
 
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm ALL ROLES загружен.")
-print("Монеты: Coin_Server, CoinVisual, MainCoin")
-print("Фармит за все роли | Центр монетки | Без чека магазина")
+print("MM2 AutoFarm DeathStop загружен.")
+print("Стоп после смерти | Макс 50 монет | Кнопка фиксирована")
