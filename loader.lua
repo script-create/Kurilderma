@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Fixed: No shop items + faster speed
---// Полный скрипт, исключены предметы магазина, увеличена скорость
+--// MM2 AutoFarm - Smooth No Lag
+--// Без перерывов, плавный сбор, без лагов
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -126,19 +126,17 @@ statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
 -- ═══════════════════════════════════════════════════════════════
--- КОНФИГ (БЫСТРЕЕ, БЕЗ МАГАЗИНА)
+-- КОНФИГ (ПЛАВНЫЙ, БЕЗ ЛАГОВ)
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
     COIN_TELEPORT_DIST = 6,
     SAFE_DIST_KILLER = 20,
-    COOLDOWN = 0.1,
-    MAX_COINS = 50,
-    SPEED = 22,           -- БЫЛО 16, СТАЛО 22
+    COOLDOWN = 0.08,
+    SPEED = 20,
     JUMP = 50,
     ESP_ENABLED = true,
     NOCLIP = true,
-    NEAR_RADIUS = 80,     -- БЫЛО 60, СТАЛО 80
-    MAX_COINS_PER_CYCLE = 7,
+    NEAR_RADIUS = 100,
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -221,12 +219,11 @@ local function addESP(part, text)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: ЭТО МАГАЗИН/ЛОББИ ПРЕДМЕТ? (НОВОЕ)
+-- ПРОВЕРКА МАГАЗИНА
 -- ═══════════════════════════════════════════════════════════════
 local function isShopItem(obj)
     if not obj or not obj.Parent then return true end
     
-    -- Проверяем родителей на магазин/лобби
     local parent = obj.Parent
     while parent do
         local name = parent.Name:lower()
@@ -238,22 +235,6 @@ local function isShopItem(obj)
         parent = parent.Parent
     end
     
-    -- Проверяем по позиции Y (магазин обычно на полу/подставках)
-    local pos = obj.Position
-    if pos.Y < 5 then
-        -- Проверяем есть ли рядом "View Bundle" или подобное
-        for _, desc in ipairs(Workspace:GetDescendants()) do
-            if desc:IsA("TextLabel") or desc:IsA("TextButton") then
-                if desc.Text:lower():find("bundle") or desc.Text:lower():find("view") then
-                    if getDistance(pos, desc.AbsolutePosition) < 50 then
-                        return true
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Проверяем по имени (исключаем оружие)
     local n = obj.Name:lower()
     if n:find("knife") or n:find("gun") or n:find("weapon") or n:find("blade") or 
        n:find("sword") or n:find("axe") or n:find("hammer") then
@@ -264,7 +245,7 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (БЕЗ МАГАЗИНА)
+-- ПОИСК МОНЕТ
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
@@ -274,7 +255,6 @@ local function findCoins()
         if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and not checked[obj] then
             checked[obj] = true
             
-            -- ПРОВЕРКА: не магазин?
             if isShopItem(obj) then
                 continue
             end
@@ -328,7 +308,7 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ (БЫСТРЕЕ)
+-- ДВИЖЕНИЕ (ПЛАВНОЕ)
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
@@ -342,8 +322,7 @@ local function tweenTo(pos)
         tpTo(pos)
         return
     end
-    -- БЫСТРЕЕ: dist / 20 вместо / 15
-    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 20, 2.5), Enum.EasingStyle.Linear), {
+    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 2), Enum.EasingStyle.Linear), {
         CFrame = CFrame.new(pos.X, pos.Y + 4, pos.Z)
     })
     tween:Play()
@@ -426,15 +405,9 @@ local function startAntiAfk()
         if not isRunning then return end
         
         afkTimer = afkTimer + dt
-        if afkTimer >= 5 then
+        if afkTimer >= 8 then
             afkTimer = 0
-            VirtualInputManager:SendMouseMoveEvent(math.random(-10, 10), math.random(-10, 10), game)
-        end
-        
-        if math.random(1, 300) == 1 then
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-            wait(0.1)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+            VirtualInputManager:SendMouseMoveEvent(math.random(-5, 5), math.random(-5, 5), game)
         end
     end)
 end
@@ -447,21 +420,20 @@ local function stopAntiAfk()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- SPEED BOOST (БЫСТРЕЕ)
+-- SPEED BOOST
 -- ═══════════════════════════════════════════════════════════════
 local function applySpeed()
     if humanoid then
-        humanoid.WalkSpeed = CONFIG.SPEED  -- 22
+        humanoid.WalkSpeed = CONFIG.SPEED
         humanoid.JumpPower = CONFIG.JUMP
     end
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (БЕЗ МАГАЗИНА, БЫСТРЕЕ)
+-- ГЛАВНЫЙ ЦИКЛ (БЕЗ ПЕРЕРЫВОВ, БЕЗ ЛАГОВ)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
-    local collected = 0
     local processed = {}
     
     while isRunning do
@@ -486,29 +458,18 @@ local function farmLoop()
             if dist <= CONFIG.NEAR_RADIUS then
                 table.insert(coins, coin)
             end
-            if #coins >= 12 then
+            if #coins >= 15 then
                 break
             end
         end
         
         if #coins == 0 then
-            wait(1.5)
+            wait(1)
             continue
         end
         
-        local cycleCount = 0
-        
         for _, coin in ipairs(coins) do
             if not isRunning then break end
-            if collected >= CONFIG.MAX_COINS then
-                collected = 0
-                wait(2)
-                break
-            end
-            if cycleCount >= CONFIG.MAX_COINS_PER_CYCLE then
-                wait(2)
-                break
-            end
             if processed[coin] then continue end
             
             if murderer and isAlive(murderer) then
@@ -523,12 +484,8 @@ local function farmLoop()
                 addESP(coin, "💰")
             end
             
-            if collectCoin(coin) then
-                collected = collected + 1
-                cycleCount = cycleCount + 1
-                processed[coin] = true
-            end
-            
+            collectCoin(coin)
+            processed[coin] = true
             applySpeed()
         end
         
@@ -538,7 +495,7 @@ local function farmLoop()
             end
         end
         
-        wait(0.3)
+        wait(0.1)
     end
 end
 
@@ -656,5 +613,4 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm ShopSafe загружен.")
-print("Скорость: " .. CONFIG.SPEED .. " | Радиус: " .. CONFIG.NEAR_RADIUS .. " | Магазин исключён")
+print("MM2 AutoFarm Smooth загружен. Без лагов, без перерывов.")
