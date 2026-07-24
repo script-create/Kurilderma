@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.5 - SPEED 16, нет уворотов
+--// MM2 AutoFarm v2.6 - SPEED 14, не летит вверх
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -112,8 +112,8 @@ statusLabel.Parent = mainFrame
 
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.1,
-	SPEED = 16,
+	COOLDOWN = 0.15,
+	SPEED = 14,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
@@ -196,9 +196,15 @@ end
 
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
-	local dist = getDistance(humanoidRootPart.Position, pos)
+	local currentPos = humanoidRootPart.Position
+	local dist = getDistance(currentPos, pos)
 	if dist < 2 then tpTo(pos); return end
-	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 35, 1), Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
+	
+	-- Не летим вверх — Y = текущий Y игрока
+	local flatPos = Vector3.new(pos.X, currentPos.Y, pos.Z)
+	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 1.5), Enum.EasingStyle.Linear), {
+		CFrame = CFrame.new(flatPos)
+	})
 	tween:Play()
 	tween.Completed:Wait()
 end
@@ -368,4 +374,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.5 загружен. SPEED=16")
+print("MM2 AutoFarm v2.6 загружен. SPEED=14, flat Y")
