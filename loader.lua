@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.2 - Оптимизированный, без лагов
+--// MM2 AutoFarm v2.3 - Собирает все монеты, без зависаний
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -132,8 +132,7 @@ local CONFIG = {
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
-	NEAR_RADIUS = 300,
-	CACHE_INTERVAL = 1, -- секунда между обновлениями кеша монет
+	NEAR_RADIUS = 500,
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -203,24 +202,21 @@ local function isRealCoin(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- КЕШ МОНЕТ (обновляется раз в секунду, не каждый кадр)
+-- ПОИСК МОНЕТ (один раз за цикл)
 -- ═══════════════════════════════════════════════════════════════
-local cachedCoins = {}
-local lastCacheUpdate = 0
-
-local function updateCoinCache()
-	cachedCoins = {}
+local function findCoins()
+	local coins = {}
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if isRealCoin(obj) then
-			table.insert(cachedCoins, obj)
+			table.insert(coins, obj)
 		end
 	end
 	if humanoidRootPart then
-		table.sort(cachedCoins, function(a, b)
+		table.sort(coins, function(a, b)
 			return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
 		end)
 	end
-	lastCacheUpdate = tick()
+	return coins
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -235,7 +231,7 @@ local function tweenTo(pos)
 	if not humanoidRootPart then return end
 	local dist = getDistance(humanoidRootPart.Position, pos)
 	if dist < 2 then tpTo(pos); return end
-	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 30, 1.5), Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
+	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 35, 1), Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
 	tween:Play()
 	tween.Completed:Wait()
 end
@@ -263,11 +259,64 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
+-- СБОР ОДНОЙ МОНЕТЫ
+-- ═══════════════════════════════════════════════════════════════
+local function collectCoin(coin)
+	if not coin or not coin.Parent then return end
+	if not humanoidRootPart then return end
+	if not isAliveCheck(player) then return end
+	
+	local coinPos = coin.Position
+	local dist = getDistance(humanoidRootPart.Position, coinPos)
+	
+	if dist > CONFIG.NEAR_RADIUS then return end
+	
+	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
+	
+	if dist > CONFIG.COIN_TELEPORT_DIST then
+		tweenTo(coinPos)
+	else
+		tpTo(coinPos)
+	end
+	
+	task.wait(0.03)
+	
+	pcall(function()
+		firetouchinterest(humanoidRootPart, coin, 0)
+		task.wait(0.02)
+		firetouchinterest(humanoidRootPart, coin, 1)
+	end)
+	
+	pcall(function()
+		local prompt = coin:FindFirstChildOfClass("ProximityPrompt")
+		if prompt then fireproximityprompt(prompt, 0) end
+	end)
+	
+	pcall(function()
+		local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+		if remotes then
+			local collect = remotes:FindFirstChild("CoinCollected") or remotes:FindFirstChild("CollectCoin") or remotes:FindFirstChild("PickupCoin")
+			if collect then collect:FireServer(coin) end
+		end
+	end)
+	
+	pcall(function()
+		local rp = ReplicatedStorage:FindFirstChild("RF") or ReplicatedStorage:FindFirstChild("RE")
+		if rp then
+			local pickup = rp:FindFirstChild("Pickup") or rp:FindFirstChild("Collect")
+			if pickup then pickup:InvokeServer(coin) end
+		end
+	end)
+	
+	applySpeed()
+	task.wait(CONFIG.COOLDOWN)
+end
+
+-- ═══════════════════════════════════════════════════════════════
 -- ГЛАВНЫЙ ЦИКЛ
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
 	createESP()
-	local processed = {}
 	
 	while isRunning do
 		-- ПАУЗА ПРИ СМЕРТИ
@@ -289,77 +338,22 @@ local function farmLoop()
 		
 		if not humanoidRootPart then task.wait(0.5); continue end
 		
-		-- ОБНОВЛЯЕМ КЕШ РАЗ В СЕКУНДУ
-		if tick() - lastCacheUpdate >= CONFIG.CACHE_INTERVAL then
-			updateCoinCache()
+		-- ИЩЕМ МОНЕТЫ
+		local coins = findCoins()
+		
+		if #coins == 0 then
+			task.wait(0.5)
+			continue
 		end
 		
-		if #cachedCoins == 0 then task.wait(0.3); continue end
-		
-		-- СБОР БЛИЖАЙШИХ
-		for i, coin in ipairs(cachedCoins) do
+		-- СОБИРАЕМ ПО ОДНОЙ, БЕЗ PROCESSED
+		for _, coin in ipairs(coins) do
 			if not isRunning then break end
 			if not isAliveCheck(player) then break end
-			if not humanoidRootPart then break end
-			
-			local coinId = tostring(coin)
-			if processed[coinId] then continue end
-			
-			local dist = getDistance(humanoidRootPart.Position, coin.Position)
-			if dist > CONFIG.NEAR_RADIUS then continue end
-			
-			if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
-			
-			if dist > CONFIG.COIN_TELEPORT_DIST then
-				tweenTo(coin.Position)
-			else
-				tpTo(coin.Position)
-			end
-			
-			task.wait(0.03)
-			
-			pcall(function()
-				firetouchinterest(humanoidRootPart, coin, 0)
-				task.wait(0.02)
-				firetouchinterest(humanoidRootPart, coin, 1)
-			end)
-			
-			pcall(function()
-				local prompt = coin:FindFirstChildOfClass("ProximityPrompt")
-				if prompt then fireproximityprompt(prompt, 0) end
-			end)
-			
-			pcall(function()
-				local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-				if remotes then
-					local collect = remotes:FindFirstChild("CoinCollected") or remotes:FindFirstChild("CollectCoin") or remotes:FindFirstChild("PickupCoin")
-					if collect then collect:FireServer(coin) end
-				end
-			end)
-			
-			pcall(function()
-				local rp = ReplicatedStorage:FindFirstChild("RF") or ReplicatedStorage:FindFirstChild("RE")
-				if rp then
-					local pickup = rp:FindFirstChild("Pickup") or rp:FindFirstChild("Collect")
-					if pickup then pickup:InvokeServer(coin) end
-				end
-			end)
-			
-			processed[coinId] = true
-			applySpeed()
-			task.wait(CONFIG.COOLDOWN)
+			collectCoin(coin)
 		end
 		
-		-- Чистка processed
-		for id, _ in pairs(processed) do
-			local exists = false
-			for _, obj in ipairs(cachedCoins) do
-				if tostring(obj) == id then exists = true; break end
-			end
-			if not exists then processed[id] = nil end
-		end
-		
-		task.wait(0.05)
+		task.wait(0.1)
 	end
 end
 
@@ -369,7 +363,6 @@ end
 function startFarm()
 	if isRunning then return end
 	isRunning = true
-	updateCoinCache()
 	toggleButton.Text = "⏸"
 	statusLabel.Text = "▶"
 	statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
@@ -429,4 +422,4 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm v2.2 загружен. Оптимизированный.")
+print("MM2 AutoFarm v2.3 загружен.")
