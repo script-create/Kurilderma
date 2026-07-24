@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.3 - Собирает все монеты, без зависаний
+--// MM2 AutoFarm v2.4 - SPEED 20, COOLDOWN 0.1
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -127,8 +127,8 @@ statusLabel.Parent = mainFrame
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.05,
-	SPEED = 25,
+	COOLDOWN = 0.1,
+	SPEED = 20,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
@@ -202,7 +202,7 @@ local function isRealCoin(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (один раз за цикл)
+-- ПОИСК МОНЕТ
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
 	local coins = {}
@@ -338,7 +338,6 @@ local function farmLoop()
 		
 		if not humanoidRootPart then task.wait(0.5); continue end
 		
-		-- ИЩЕМ МОНЕТЫ
 		local coins = findCoins()
 		
 		if #coins == 0 then
@@ -346,7 +345,6 @@ local function farmLoop()
 			continue
 		end
 		
-		-- СОБИРАЕМ ПО ОДНОЙ, БЕЗ PROCESSED
 		for _, coin in ipairs(coins) do
 			if not isRunning then break end
 			if not isAliveCheck(player) then break end
@@ -422,4 +420,4 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm v2.3 загружен.")
+print("MM2 AutoFarm v2.4 загружен. SPEED=20 COOLDOWN=0.1")
