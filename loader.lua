@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.8 - SPEED 14, tween скорость уменьшена
+--// MM2 AutoFarm v2.9 - Базовая скорость 16
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -113,13 +113,12 @@ statusLabel.Parent = mainFrame
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
 	COOLDOWN = 0.15,
-	SPEED = 14,
+	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
 	MAX_Y_DIFF = 15,
-	TWEEN_SPEED = 18,
 }
 
 local isRunning = false
@@ -205,7 +204,7 @@ local function tweenTo(pos)
 	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
 	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
-	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / CONFIG.TWEEN_SPEED, 2.5), Enum.EasingStyle.Linear), {
+	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 16, 3), Enum.EasingStyle.Linear), {
 		CFrame = CFrame.new(safePos)
 	})
 	tween:Play()
@@ -377,4 +376,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.8 загружен. TWEEN_SPEED=18")
+print("MM2 AutoFarm v2.9 загружен. SPEED=16, tween /16")
