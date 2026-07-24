@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Final Working Version
---// Имена монет: Coin_Server, CoinVisual, MainCoin
+--// MM2 AutoFarm - All Roles + Center Touch
+--// Фармит за все роли, касается центра монетки, без чека магазина
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -129,8 +129,8 @@ statusLabel.Parent = mainFrame
 -- КОНФИГ
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
-    COIN_TELEPORT_DIST = 6,
-    SAFE_DIST_KILLER = 20,
+    COIN_TELEPORT_DIST = 3,
+    SAFE_DIST_KILLER = 15,
     COOLDOWN = 0.08,
     SPEED = 20,
     JUMP = 50,
@@ -175,17 +175,6 @@ local function getMurderer()
     return nil
 end
 
-local function getRole()
-    local bp = player:FindFirstChild("Backpack")
-    local char = player.Character
-    if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
-        return "Murderer"
-    elseif (bp and bp:FindFirstChild("Gun")) or (char and char:FindFirstChild("Gun")) then
-        return "Sheriff"
-    end
-    return "Innocent"
-end
-
 -- ═══════════════════════════════════════════════════════════════
 -- ESP
 -- ═══════════════════════════════════════════════════════════════
@@ -219,33 +208,7 @@ local function addESP(part, text)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА МАГАЗИНА
--- ═══════════════════════════════════════════════════════════════
-local function isShopItem(obj)
-    if not obj or not obj.Parent then return true end
-    
-    local parent = obj.Parent
-    while parent do
-        local name = parent.Name:lower()
-        if name:find("shop") or name:find("store") or name:find("bundle") or 
-           name:find("weapon") or name:find("knife") or name:find("gun") or
-           name:find("display") or name:find("showcase") or name:find("lobby") then
-            return true
-        end
-        parent = parent.Parent
-    end
-    
-    local n = obj.Name:lower()
-    if n:find("knife") or n:find("gun") or n:find("weapon") or n:find("blade") or 
-       n:find("sword") or n:find("axe") or n:find("hammer") then
-        return true
-    end
-    
-    return false
-end
-
--- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: ТОЛЬКО ТОЧНЫЕ ИМЕНА МОНЕТ
+-- ПРОВЕРКА МОНЕТЫ (БЕЗ ЧЕКА МАГАЗИНА)
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
@@ -253,10 +216,6 @@ local function isRealCoin(obj)
     
     local n = obj.Name
     if n ~= "Coin_Server" and n ~= "CoinVisual" and n ~= "MainCoin" then
-        return false
-    end
-    
-    if isShopItem(obj) then
         return false
     end
     
@@ -288,29 +247,31 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ
+-- ДВИЖЕНИЕ (В ЦЕНТР МОНЕТКИ)
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
-    humanoidRootPart.CFrame = CFrame.new(pos.X, pos.Y + 4, pos.Z)
+    -- Телепорт точно в центр монетки, без +4 по Y
+    humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
 local function tweenTo(pos)
     if not humanoidRootPart then return end
     local dist = getDistance(humanoidRootPart.Position, pos)
-    if dist < 5 then
+    if dist < 2 then
         tpTo(pos)
         return
     end
+    -- Твин точно в центр монетки
     local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 2), Enum.EasingStyle.Linear), {
-        CFrame = CFrame.new(pos.X, pos.Y + 4, pos.Z)
+        CFrame = CFrame.new(pos)
     })
     tween:Play()
     tween.Completed:Wait()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- СБОР МОНЕТЫ
+-- СБОР МОНЕТЫ (ЦЕНТР МОНЕТКИ)
 -- ═══════════════════════════════════════════════════════════════
 local function collectCoin(coin)
     if not coin or not coin.Parent then return false end
@@ -322,6 +283,7 @@ local function collectCoin(coin)
     local coinPos = coin.Position
     local murderer = getMurderer()
     
+    -- Убийца рядом — пропускаем
     if murderer and isAlive(murderer) then
         local mPos = murderer.Character.HumanoidRootPart.Position
         if getDistance(coinPos, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -329,6 +291,7 @@ local function collectCoin(coin)
         end
     end
     
+    -- Двигаемся В ЦЕНТР монетки
     local dist = getDistance(humanoidRootPart.Position, coinPos)
     if dist > CONFIG.COIN_TELEPORT_DIST then
         tweenTo(coinPos)
@@ -340,6 +303,7 @@ local function collectCoin(coin)
     
     local success = false
     
+    -- Касаемся центра монетки
     pcall(function()
         firetouchinterest(humanoidRootPart, coin, 0)
         wait(0.03)
@@ -414,7 +378,7 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ
+-- ГЛАВНЫЙ ЦИКЛ (ВСЕ РОЛИ)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
@@ -426,12 +390,7 @@ local function farmLoop()
         statusLabel.Text = "ON"
         statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
         
-        local role = getRole()
-        
-        if role == "Murderer" then
-            wait(1)
-            continue
-        end
+        -- УБРАН ЧЕК РОЛИ — ФАРМИТ ЗА ВСЕХ
         
         local allCoins = findCoins()
         local murderer = getMurderer()
@@ -456,6 +415,7 @@ local function farmLoop()
             if not isRunning then break end
             if processed[coin] then continue end
             
+            -- Убийца рядом с монетой — пропускаем
             if murderer and isAlive(murderer) then
                 local mPos = murderer.Character.HumanoidRootPart.Position
                 if getDistance(coin.Position, mPos) < CONFIG.SAFE_DIST_KILLER then
@@ -597,6 +557,6 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm FINAL загружен.")
+print("MM2 AutoFarm ALL ROLES загружен.")
 print("Монеты: Coin_Server, CoinVisual, MainCoin")
-print("Нажми ▶ для старта")
+print("Фармит за все роли | Центр монетки | Без чека магазина")
