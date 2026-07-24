@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Full Script with Noclip
---// Полный скрипт без разбивки, с noclip для прохождения сквозь стены
+--// MM2 AutoFarm - Fixed Lobby Detection + Noclip
+--// Полный скрипт, исправлена проверка лобби
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -14,7 +15,7 @@ local humanoid = character:WaitForChild("Humanoid")
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- ═══════════════════════════════════════════════════════════════
--- УСИЛЕННЫЙ АНТИ-КИК
+-- АНТИ-КИК
 -- ═══════════════════════════════════════════════════════════════
 pcall(function()
     local mt = getrawmetatable(game)
@@ -51,14 +52,6 @@ pcall(function()
     end)
 end)
 
-pcall(function()
-    for _, v in ipairs(getgc()) do
-        if type(v) == "function" and getinfo(v).name == "Kick" then
-            hookfunction(v, function() return nil end)
-        end
-    end
-end)
-
 -- ═══════════════════════════════════════════════════════════════
 -- N O C L I P
 -- ═══════════════════════════════════════════════════════════════
@@ -66,7 +59,6 @@ local noclipConnection = nil
 
 local function enableNoclip()
     if noclipConnection then noclipConnection:Disconnect() end
-    
     noclipConnection = RunService.Stepped:Connect(function()
         if not character then return end
         for _, part in ipairs(character:GetDescendants()) do
@@ -92,33 +84,76 @@ local function disableNoclip()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА ЛОББИ / РАУНДА
+-- ПРОВЕРКА ЛОББИ (ИСПРАВЛЕННАЯ)
 -- ═══════════════════════════════════════════════════════════════
 local function isInLobby()
-    local lobby = Workspace:FindFirstChild("Lobby") or Workspace:FindFirstChild("lobby")
-    if lobby then return true end
+    -- Метод 1: Проверка по наличию лобби-объектов в Workspace
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        local name = obj.Name:lower()
+        if name == "lobby" or name == "intermission" or name == "waiting" then
+            return true
+        end
+    end
     
+    -- Метод 2: Проверка по GUI (таймер лобби)
     local pg = player:FindFirstChild("PlayerGui")
     if pg then
-        for _, gui in ipairs(pg:GetChildren()) do
-            if gui.Name:lower():find("lobby") or gui.Name:lower():find("intermission") then
-                return true
+        for _, gui in ipairs(pg:GetDescendants()) do
+            if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+                local txt = gui.Text:lower()
+                if txt:find("intermission") or txt:find("waiting") or txt:find("lobby") or txt:find("vote") then
+                    return true
+                end
             end
         end
     end
     
-    local hasCoins = false
+    -- Метод 3: Проверка статуса через ReplicatedStorage
+    pcall(function()
+        for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("StringValue") or obj:IsA("IntValue") then
+                local val = tostring(obj.Value):lower()
+                if val:find("lobby") or val:find("intermission") or val:find("waiting") then
+                    return true
+                end
+            end
+        end
+    end)
+    
+    -- Метод 4: Проверка по наличию монет (ОСНОВНОЙ)
+    -- Если монеты есть — значит мы в игре, не в лобби
+    local coinCount = 0
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") then
+        if obj:IsA("BasePart") or obj:IsA("MeshPart") then
             local n = obj.Name:lower()
-            if n:find("coin") or n:find("diamond") then
-                hasCoins = true
-                break
+            if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("loot") then
+                coinCount = coinCount + 1
+                if coinCount >= 3 then
+                    return false -- Нашли 3+ монеты — точно в игре
+                end
             end
         end
     end
     
-    return not hasCoins
+    -- Метод 5: Проверка по наличию жертв / трупов (в раунде есть убитые)
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj.Name:lower():find("dead") or obj.Name:lower():find("body") or obj.Name:lower():find("corpse") then
+            return false
+        end
+    end
+    
+    -- Метод 6: Проверка по роли (если роль определена — в игре)
+    pcall(function()
+        local bp = player:FindFirstChild("Backpack")
+        local char = player.Character
+        if (bp and (bp:FindFirstChild("Knife") or bp:FindFirstChild("Gun"))) or 
+           (char and (char:FindFirstChild("Knife") or char:FindFirstChild("Gun"))) then
+            return false
+        end
+    end)
+    
+    -- Если ничего не сработало и монет мало — скорее всего лобби
+    return true
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -175,8 +210,8 @@ local CONFIG = {
     SPEED = 35,
     JUMP = 50,
     ESP_ENABLED = true,
-    AFK_INTERVAL = 15,
     NOCLIP = true,
+    LOBBY_CHECK = true, -- Можно отключить если всё равно багует
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -184,7 +219,6 @@ local CONFIG = {
 -- ═══════════════════════════════════════════════════════════════
 local isRunning = false
 local espFolder = nil
-local mainConnection = nil
 local antiAfkConnection = nil
 local afkTimer = 0
 
@@ -264,26 +298,36 @@ end
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
-    local map = Workspace:FindFirstChild("Map") or Workspace
+    local checked = {}
     
-    for _, obj in ipairs(map:GetDescendants()) do
-        if obj:IsA("BasePart") then
-            local n = obj.Name:lower()
-            if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or n:find("loot") then
-                table.insert(coins, obj)
+    -- Сканируем всю карту
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+            if not checked[obj] then
+                checked[obj] = true
+                local n = obj.Name:lower()
+                if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or n:find("loot") or n:find("candy") then
+                    table.insert(coins, obj)
+                end
             end
         end
     end
     
-    local spawns = Workspace:FindFirstChild("CoinSpawns")
-    if spawns then
-        for _, obj in ipairs(spawns:GetDescendants()) do
-            if obj:IsA("BasePart") and not obj:FindFirstChild("CoinESP_Billboard") then
-                table.insert(coins, obj)
+    -- Специфичные папки MM2
+    local folders = {"CoinSpawns", "Coins", "Loot", "Drops", "Map"}
+    for _, folderName in ipairs(folders) do
+        local folder = Workspace:FindFirstChild(folderName)
+        if folder then
+            for _, obj in ipairs(folder:GetDescendants()) do
+                if obj:IsA("BasePart") and not checked[obj] then
+                    checked[obj] = true
+                    table.insert(coins, obj)
+                end
             end
         end
     end
     
+    -- Сортировка по близости
     table.sort(coins, function(a, b)
         if not a or not b then return false end
         return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
@@ -293,7 +337,7 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ (С N O C L I P)
+-- ДВИЖЕНИЕ
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
@@ -307,7 +351,7 @@ local function tweenTo(pos)
         tpTo(pos)
         return
     end
-    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 30, 2), Enum.EasingStyle.Linear), {
+    local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 40, 1.5), Enum.EasingStyle.Linear), {
         CFrame = CFrame.new(pos.X, pos.Y + 4, pos.Z)
     })
     tween:Play()
@@ -390,7 +434,6 @@ local function startAntiAfk()
         if not isRunning then return end
         
         afkTimer = afkTimer + dt
-        
         if afkTimer >= 5 then
             afkTimer = 0
             VirtualInputManager:SendMouseMoveEvent(math.random(-10, 10), math.random(-10, 10), game)
@@ -400,14 +443,6 @@ local function startAntiAfk()
             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
             wait(0.1)
             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-        end
-        
-        if math.random(1, 200) == 1 then
-            local keys = {Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D}
-            local key = keys[math.random(1, 4)]
-            VirtualInputManager:SendKeyEvent(true, key, false, game)
-            wait(0.2)
-            VirtualInputManager:SendKeyEvent(false, key, false, game)
         end
     end)
 end
@@ -440,7 +475,8 @@ local function farmLoop()
     while isRunning do
         if not isRunning then break end
         
-        if isInLobby() then
+        -- Проверка лобби (можно отключить в конфиге)
+        if CONFIG.LOBBY_CHECK and isInLobby() then
             statusLabel.Text = "LOBBY"
             statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
             wait(2)
@@ -618,4 +654,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm с Noclip загружен. Нажми ▶ для старта.")
+print("MM2 AutoFarm Fixed загружен.")
+print("Если всё равно показывает LOBBY — измени в конфиге LOBBY_CHECK = false")
