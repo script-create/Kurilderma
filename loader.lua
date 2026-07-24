@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.6 - SPEED 14, не летит вверх
+--// MM2 AutoFarm v2.7 - SPEED 14, Y монеты но без багов
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -118,6 +118,7 @@ local CONFIG = {
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
+	MAX_Y_DIFF = 15,
 }
 
 local isRunning = false
@@ -200,10 +201,12 @@ local function tweenTo(pos)
 	local dist = getDistance(currentPos, pos)
 	if dist < 2 then tpTo(pos); return end
 	
-	-- Не летим вверх — Y = текущий Y игрока
-	local flatPos = Vector3.new(pos.X, currentPos.Y, pos.Z)
+	-- Y монеты но ограничен, не улетит в космос
+	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
+	local safePos = Vector3.new(pos.X, targetY, pos.Z)
+	
 	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 1.5), Enum.EasingStyle.Linear), {
-		CFrame = CFrame.new(flatPos)
+		CFrame = CFrame.new(safePos)
 	})
 	tween:Play()
 	tween.Completed:Wait()
@@ -374,4 +377,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.6 загружен. SPEED=14, flat Y")
+print("MM2 AutoFarm v2.7 загружен. SPEED=14, Y clamped")
