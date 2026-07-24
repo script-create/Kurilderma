@@ -1,5 +1,4 @@
---// MM2 AutoFarm v2.0 - Server Data Counter
---// Счёт по данным сервера, пауза при смерти, 50 макс, авто-продолжение после респавна
+--// MM2 AutoFarm v2.1 - Чистый фарм, пауза при смерти, продолжение после респавна
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,29 +6,26 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 
 -- ═══════════════════════════════════════════════════════════════
--- РЕФЕРЕНСЫ НА КЕРАКТЕР (динамические)
+-- РЕФЕРЕНСЫ
 -- ═══════════════════════════════════════════════════════════════
-local character = nil
-local humanoid = nil
-local humanoidRootPart = nil
+local character, humanoid, humanoidRootPart = nil, nil, nil
 
 local function updateCharacterRefs(newChar)
+	if not newChar then return false end
 	character = newChar
-	if not character then return false end
-	humanoid = character:WaitForChild("Humanoid", 3)
-	humanoidRootPart = character:WaitForChild("HumanoidRootPart", 3)
+	humanoid = newChar:WaitForChild("Humanoid", 3)
+	humanoidRootPart = newChar:WaitForChild("HumanoidRootPart", 3)
 	return humanoid ~= nil and humanoidRootPart ~= nil
 end
 
 updateCharacterRefs(player.Character or player.CharacterAdded:Wait())
 
 -- ═══════════════════════════════════════════════════════════════
--- АНТИ-КИК (многослойный)
+-- АНТИ-КИК
 -- ═══════════════════════════════════════════════════════════════
 pcall(function()
 	local mt = getrawmetatable(game)
@@ -147,88 +143,21 @@ statusLabel.Parent = mainFrame
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	SAFE_DIST_KILLER = 15,
 	COOLDOWN = 0.08,
 	SPEED = 20,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
-	NEAR_RADIUS = 100,
-	MAX_COINS = 50,
+	NEAR_RADIUS = 200,
 }
 
 -- ═══════════════════════════════════════════════════════════════
 -- СОСТОЯНИЕ
 -- ═══════════════════════════════════════════════════════════════
 local isRunning = false
-local isAliveFlag = true
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
-local startServerCoins = 0
-local collectedCoins = 0
-
--- ═══════════════════════════════════════════════════════════════
--- СЧЁТЧИК ПО ДАННЫМ СЕРВЕРА
--- ═══════════════════════════════════════════════════════════════
-local function getServerCoinData()
-	-- Метод 1: PlayerData в ReplicatedStorage
-	local ok, result = pcall(function()
-		local data = ReplicatedStorage:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("Data")
-		if data then
-			local plrData = data:FindFirstChild(player.Name) or data:FindFirstChild(tostring(player.UserId))
-			if plrData then
-				local coins = plrData:FindFirstChild("Coins") or plrData:FindFirstChild("coins") or plrData:FindFirstChild("Money")
-				if coins and (coins:IsA("IntValue") or coins:IsA("NumberValue")) then
-					return coins.Value
-				end
-			end
-		end
-		return nil
-	end)
-	if ok and result ~= nil then return result end
-	
-	-- Метод 2: Stats в player
-	ok, result = pcall(function()
-		local stats = player:FindFirstChild("leaderstats") or player:FindFirstChild("Stats")
-		if stats then
-			local coins = stats:FindFirstChild("Coins") or stats:FindFirstChild("coins") or stats:FindFirstChild("Money")
-			if coins and (coins:IsA("IntValue") or coins:IsA("NumberValue")) then
-				return coins.Value
-			end
-		end
-		return nil
-	end)
-	if ok and result ~= nil then return result end
-	
-	-- Метод 3: Values в Workspace
-	ok, result = pcall(function()
-		local values = Workspace:FindFirstChild("Values") or Workspace:FindFirstChild("GameValues")
-		if values then
-			local coins = values:FindFirstChild("Coins") or values:FindFirstChild("TotalCoins")
-			if coins and (coins:IsA("IntValue") or coins:IsA("NumberValue")) then
-				return coins.Value
-			end
-		end
-		return nil
-	end)
-	if ok and result ~= nil then return result end
-	
-	-- Метод 4: Attributes на player
-	ok, result = pcall(function()
-		return player:GetAttribute("Coins") or player:GetAttribute("coins") or player:GetAttribute("Money")
-	end)
-	if ok and result ~= nil then return result end
-	
-	-- Метод 5: Attributes на character
-	ok, result = pcall(function()
-		if not character then return nil end
-		return character:GetAttribute("Coins") or character:GetAttribute("coins")
-	end)
-	if ok and result ~= nil then return result end
-	
-	return 0
-end
 
 -- ═══════════════════════════════════════════════════════════════
 -- УТИЛИТЫ
@@ -244,19 +173,6 @@ local function isAliveCheck(plr)
 	if not char then return false end
 	local hum = char:FindFirstChildOfClass("Humanoid")
 	return hum and hum.Health > 0
-end
-
-local function getMurderer()
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= player then
-			local bp = p:FindFirstChild("Backpack")
-			local char = p.Character
-			if (bp and bp:FindFirstChild("Knife")) or (char and char:FindFirstChild("Knife")) then
-				return p
-			end
-		end
-	end
-	return nil
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -291,14 +207,6 @@ local function addESP(part, text)
 	lbl.Parent = bb
 end
 
-local function clearESP()
-	if espFolder then
-		for _, child in ipairs(espFolder:GetChildren()) do
-			child:Destroy()
-		end
-	end
-end
-
 -- ═══════════════════════════════════════════════════════════════
 -- ПРОВЕРКА МОНЕТЫ
 -- ═══════════════════════════════════════════════════════════════
@@ -316,29 +224,6 @@ local function isRealCoin(obj)
 	end
 	
 	return true
-end
-
--- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ
--- ═══════════════════════════════════════════════════════════════
-local function findCoins()
-	local coins = {}
-	local hrp = humanoidRootPart
-	
-	for _, obj in ipairs(Workspace:GetDescendants()) do
-		if isRealCoin(obj) then
-			table.insert(coins, obj)
-		end
-	end
-	
-	if hrp then
-		table.sort(coins, function(a, b)
-			if not a or not b then return false end
-			return getDistance(hrp.Position, a.Position) < getDistance(hrp.Position, b.Position)
-		end)
-	end
-	
-	return coins
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -364,77 +249,6 @@ local function tweenTo(pos)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- СБОР МОНЕТЫ
--- ═══════════════════════════════════════════════════════════════
-local function collectCoin(coin)
-	if not coin or not coin.Parent then return false end
-	if not humanoidRootPart then return false end
-	if not isRealCoin(coin) then return false end
-	
-	local coinPos = coin.Position
-	local murderer = getMurderer()
-	
-	if murderer and isAliveCheck(murderer) then
-		local mChar = murderer.Character
-		local mHrp = mChar and mChar:FindFirstChild("HumanoidRootPart")
-		if mHrp and getDistance(coinPos, mHrp.Position) < CONFIG.SAFE_DIST_KILLER then
-			return false
-		end
-	end
-	
-	local dist = getDistance(humanoidRootPart.Position, coinPos)
-	if dist > CONFIG.COIN_TELEPORT_DIST then
-		tweenTo(coinPos)
-	else
-		tpTo(coinPos)
-	end
-	
-	task.wait(0.05)
-	
-	local success = false
-	
-	pcall(function()
-		firetouchinterest(humanoidRootPart, coin, 0)
-		task.wait(0.03)
-		firetouchinterest(humanoidRootPart, coin, 1)
-		success = true
-	end)
-	
-	pcall(function()
-		local prompt = coin:FindFirstChildOfClass("ProximityPrompt")
-		if prompt then
-			fireproximityprompt(prompt, 0)
-			success = true
-		end
-	end)
-	
-	pcall(function()
-		local remotes = ReplicatedStorage:FindFirstChild("Remotes")
-		if remotes then
-			local collect = remotes:FindFirstChild("CoinCollected") or remotes:FindFirstChild("CollectCoin") or remotes:FindFirstChild("PickupCoin")
-			if collect then
-				collect:FireServer(coin)
-				success = true
-			end
-		end
-	end)
-	
-	pcall(function()
-		local rp = ReplicatedStorage:FindFirstChild("RF") or ReplicatedStorage:FindFirstChild("RE")
-		if rp then
-			local pickup = rp:FindFirstChild("Pickup") or rp:FindFirstChild("Collect")
-			if pickup then
-				pickup:InvokeServer(coin)
-				success = true
-			end
-		end
-	end)
-	
-	task.wait(CONFIG.COOLDOWN)
-	return success
-end
-
--- ═══════════════════════════════════════════════════════════════
 -- АНТИ-AFK
 -- ═══════════════════════════════════════════════════════════════
 local function startAntiAfk()
@@ -455,9 +269,6 @@ local function stopAntiAfk()
 	end
 end
 
--- ═══════════════════════════════════════════════════════════════
--- SPEED BOOST
--- ═══════════════════════════════════════════════════════════════
 local function applySpeed()
 	if humanoid then
 		humanoid.WalkSpeed = CONFIG.SPEED
@@ -466,155 +277,120 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ОБНОВЛЕНИЕ СТАТУСА GUI
--- ═══════════════════════════════════════════════════════════════
-local function updateStatus()
-	local earned = collectedCoins
-	if earned >= CONFIG.MAX_COINS then
-		statusLabel.Text = tostring(earned) .. "/" .. tostring(CONFIG.MAX_COINS) .. " ✓"
-		statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
-	elseif not isAliveFlag then
-		statusLabel.Text = tostring(earned) .. "/" .. tostring(CONFIG.MAX_COINS) .. " 💀"
-		statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
-	else
-		statusLabel.Text = tostring(earned) .. "/" .. tostring(CONFIG.MAX_COINS)
-		statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
-	end
-end
-
--- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (ПАУЗА ПРИ СМЕРТИ, ПРОДОЛЖЕНИЕ ПОСЛЕ РЕСПАВНА)
+-- ГЛАВНЫЙ ЦИКЛ
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
 	createESP()
 	local processed = {}
 	
-	-- Запоминаем стартовое значение
-	startServerCoins = getServerCoinData()
-	collectedCoins = 0
-	print("[MM2AF] Стартовый счёт сервера: " .. startServerCoins)
-	
 	while isRunning do
-		-- ПРОВЕРКА ЖИВ ЛИ
-		isAliveFlag = isAliveCheck(player)
-		
-		-- ПРОВЕРКА ЛИМИТА
-		local currentServerCoins = getServerCoinData()
-		collectedCoins = currentServerCoins - startServerCoins
-		updateStatus()
-		
-		if collectedCoins >= CONFIG.MAX_COINS then
-			print("[MM2AF] Лимит достигнут: " .. collectedCoins)
-			stopFarm()
-			return
-		end
-		
-		-- ЕСЛИ МЁРТВ — ЖДЁМ РЕСПАВНА, НЕ ОТКЛЮЧАЕМСЯ
-		if not isAliveFlag then
-			print("[MM2AF] Мёртв — жду респавна...")
+		-- ПАУЗА ПРИ СМЕРТИ
+		if not isAliveCheck(player) then
+			statusLabel.Text = "💀"
+			statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
 			if noclipConnection then disableNoclip() end
 			
-			-- Ждём пока не воскреснем
 			while isRunning and not isAliveCheck(player) do
 				task.wait(0.5)
-				isAliveFlag = isAliveCheck(player)
-				updateStatus()
 			end
 			
 			if not isRunning then return end
 			
-			-- Обновляем референсы после респавна
 			local newChar = player.Character
 			if newChar then
 				updateCharacterRefs(newChar)
-				print("[MM2AF] Респавн — продолжаю фарм")
-				if CONFIG.NOCLIP then
-					enableNoclip()
-				end
+				statusLabel.Text = "▶"
+				statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+				if CONFIG.NOCLIP then enableNoclip() end
 				applySpeed()
 			end
 		end
 		
-		-- ПРОВЕРКА РЕФЕРЕНСОВ
 		if not humanoidRootPart then
 			task.wait(0.5)
 			continue
 		end
 		
 		-- ПОИСК МОНЕТ
-		local allCoins = findCoins()
-		local murderer = getMurderer()
-		
-		local nearbyCoins = {}
-		for _, coin in ipairs(allCoins) do
-			local dist = getDistance(humanoidRootPart.Position, coin.Position)
-			if dist <= CONFIG.NEAR_RADIUS then
-				table.insert(nearbyCoins, coin)
+		local coins = {}
+		for _, obj in ipairs(Workspace:GetDescendants()) do
+			if isRealCoin(obj) then
+				table.insert(coins, obj)
 			end
-			if #nearbyCoins >= 15 then break end
 		end
 		
-		if #nearbyCoins == 0 then
-			task.wait(0.5)
+		table.sort(coins, function(a, b)
+			return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
+		end)
+		
+		if #coins == 0 then
+			task.wait(0.3)
 			continue
 		end
 		
 		-- СБОР
-		for _, coin in ipairs(nearbyCoins) do
+		for _, coin in ipairs(coins) do
 			if not isRunning then break end
+			if not isAliveCheck(player) then break end
+			if not humanoidRootPart then break end
 			
-			-- Проверка жив ли (мог умереть во время сбора)
-			if not isAliveCheck(player) then
-				isAliveFlag = false
-				break -- выходим из цикла for, while продолжится и дождётся респавна
-			end
-			
-			-- Проверка лимита
-			collectedCoins = getServerCoinData() - startServerCoins
-			updateStatus()
-			if collectedCoins >= CONFIG.MAX_COINS then
-				print("[MM2AF] Лимит достигнут во время сбора")
-				stopFarm()
-				return
-			end
-			
-			-- Пропуск уже собранных
 			local coinId = tostring(coin)
 			if processed[coinId] then continue end
 			
-			-- Проверка безопасности
-			if murderer and isAliveCheck(murderer) then
-				local mChar = murderer.Character
-				local mHrp = mChar and mChar:FindFirstChild("HumanoidRootPart")
-				if mHrp and getDistance(coin.Position, mHrp.Position) < CONFIG.SAFE_DIST_KILLER then
-					processed[coinId] = true
-					continue
-				end
-			end
+			local dist = getDistance(humanoidRootPart.Position, coin.Position)
+			if dist > CONFIG.NEAR_RADIUS then continue end
 			
-			-- ESP
 			if CONFIG.ESP_ENABLED then
 				addESP(coin, "💰")
 			end
 			
-			-- Сбор
-			collectCoin(coin)
+			if dist > CONFIG.COIN_TELEPORT_DIST then
+				tweenTo(coin.Position)
+			else
+				tpTo(coin.Position)
+			end
+			
+			task.wait(0.05)
+			
+			pcall(function()
+				firetouchinterest(humanoidRootPart, coin, 0)
+				task.wait(0.03)
+				firetouchinterest(humanoidRootPart, coin, 1)
+			end)
+			
+			pcall(function()
+				local prompt = coin:FindFirstChildOfClass("ProximityPrompt")
+				if prompt then fireproximityprompt(prompt, 0) end
+			end)
+			
+			pcall(function()
+				local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+				if remotes then
+					local collect = remotes:FindFirstChild("CoinCollected") or remotes:FindFirstChild("CollectCoin") or remotes:FindFirstChild("PickupCoin")
+					if collect then collect:FireServer(coin) end
+				end
+			end)
+			
+			pcall(function()
+				local rp = ReplicatedStorage:FindFirstChild("RF") or ReplicatedStorage:FindFirstChild("RE")
+				if rp then
+					local pickup = rp:FindFirstChild("Pickup") or rp:FindFirstChild("Collect")
+					if pickup then pickup:InvokeServer(coin) end
+				end
+			end)
+			
 			processed[coinId] = true
 			applySpeed()
+			task.wait(CONFIG.COOLDOWN)
 		end
 		
-		-- Чистка processed от удалённых монет
+		-- Чистка processed
 		for id, _ in pairs(processed) do
-			local stillExists = false
+			local exists = false
 			for _, obj in ipairs(Workspace:GetDescendants()) do
-				if tostring(obj) == id then
-					stillExists = true
-					break
-				end
+				if tostring(obj) == id then exists = true; break end
 			end
-			if not stillExists then
-				processed[id] = nil
-			end
+			if not exists then processed[id] = nil end
 		end
 		
 		task.wait(0.1)
@@ -628,26 +404,19 @@ function startFarm()
 	if isRunning then return end
 	isRunning = true
 	
-	startServerCoins = getServerCoinData()
-	collectedCoins = 0
-	isAliveFlag = isAliveCheck(player)
-	
 	toggleButton.Text = "⏸"
-	statusLabel.Text = "0/" .. tostring(CONFIG.MAX_COINS)
+	statusLabel.Text = "▶"
 	statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
 	stroke.Color = Color3.fromRGB(50, 255, 50)
 	
-	if CONFIG.NOCLIP then
-		enableNoclip()
-	end
-	
+	if CONFIG.NOCLIP then enableNoclip() end
 	startAntiAfk()
 	applySpeed()
 	
 	task.spawn(function()
 		local ok, err = pcall(farmLoop)
 		if not ok then
-			warn("[MM2AF] Ошибка в farmLoop: " .. tostring(err))
+			warn("[MM2AF] Ошибка: " .. tostring(err))
 			stopFarm()
 		end
 	end)
@@ -655,7 +424,6 @@ end
 
 function stopFarm()
 	isRunning = false
-	isAliveFlag = true
 	stopAntiAfk()
 	disableNoclip()
 	
@@ -681,7 +449,6 @@ toggleButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Долгое нажатие = закрыть
 local pressStart = 0
 toggleButton.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -694,7 +461,6 @@ toggleButton.InputEnded:Connect(function(input)
 		if tick() - pressStart >= 1.5 then
 			stopFarm()
 			screenGui:Destroy()
-			print("[MM2AF] GUI закрыт")
 		end
 	end
 end)
@@ -702,36 +468,23 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- ОБНОВЛЕНИЕ ПРИ РЕСПАВНЕ
 -- ═══════════════════════════════════════════════════════════════
-
 player.CharacterAdded:Connect(function(newChar)
-    character = newChar
-    humanoid = newChar:WaitForChild("Humanoid", 3)
-    humanoidRootPart = newChar:WaitForChild("HumanoidRootPart", 3)
-    
-    if isRunning then
-        print("[MM2AF] Респавн — референсы обновлены")
-        if CONFIG.NOCLIP then
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-        end
-        if humanoid then
-            humanoid.WalkSpeed = CONFIG.SPEED
-            humanoid.JumpPower = CONFIG.JUMP
-        end
-    end
+	updateCharacterRefs(newChar)
+	if isRunning then
+		if CONFIG.NOCLIP then enableNoclip() end
+		applySpeed()
+	end
 end)
 
 player.CharacterRemoving:Connect(function()
-    if isRunning then
-        print("[MM2AF] Умер — жду респавна...")
-    end
+	if isRunning then
+		statusLabel.Text = "💀"
+		statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
+	end
 end)
 
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm ServerCounter загружен.")
-print("Счёт по данным сервера | Пауза при смерти | 50 макс")
+print("MM2 AutoFarm v2.1 загружен.")
+print("Чистый фарм | Пауза при смерти | Без лимита")
