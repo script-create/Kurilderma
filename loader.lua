@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Fixed Lobby Detection + Noclip
---// Полный скрипт, исправлена проверка лобби
+--// MM2 AutoFarm - Debug Version (Lobby check removed)
+--// Полный скрипт без проверки лобби, с отладкой
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,7 +7,6 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -84,79 +83,6 @@ local function disableNoclip()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА ЛОББИ (ИСПРАВЛЕННАЯ)
--- ═══════════════════════════════════════════════════════════════
-local function isInLobby()
-    -- Метод 1: Проверка по наличию лобби-объектов в Workspace
-    for _, obj in ipairs(Workspace:GetChildren()) do
-        local name = obj.Name:lower()
-        if name == "lobby" or name == "intermission" or name == "waiting" then
-            return true
-        end
-    end
-    
-    -- Метод 2: Проверка по GUI (таймер лобби)
-    local pg = player:FindFirstChild("PlayerGui")
-    if pg then
-        for _, gui in ipairs(pg:GetDescendants()) do
-            if gui:IsA("TextLabel") or gui:IsA("TextButton") then
-                local txt = gui.Text:lower()
-                if txt:find("intermission") or txt:find("waiting") or txt:find("lobby") or txt:find("vote") then
-                    return true
-                end
-            end
-        end
-    end
-    
-    -- Метод 3: Проверка статуса через ReplicatedStorage
-    pcall(function()
-        for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
-            if obj:IsA("StringValue") or obj:IsA("IntValue") then
-                local val = tostring(obj.Value):lower()
-                if val:find("lobby") or val:find("intermission") or val:find("waiting") then
-                    return true
-                end
-            end
-        end
-    end)
-    
-    -- Метод 4: Проверка по наличию монет (ОСНОВНОЙ)
-    -- Если монеты есть — значит мы в игре, не в лобби
-    local coinCount = 0
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") or obj:IsA("MeshPart") then
-            local n = obj.Name:lower()
-            if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("loot") then
-                coinCount = coinCount + 1
-                if coinCount >= 3 then
-                    return false -- Нашли 3+ монеты — точно в игре
-                end
-            end
-        end
-    end
-    
-    -- Метод 5: Проверка по наличию жертв / трупов (в раунде есть убитые)
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj.Name:lower():find("dead") or obj.Name:lower():find("body") or obj.Name:lower():find("corpse") then
-            return false
-        end
-    end
-    
-    -- Метод 6: Проверка по роли (если роль определена — в игре)
-    pcall(function()
-        local bp = player:FindFirstChild("Backpack")
-        local char = player.Character
-        if (bp and (bp:FindFirstChild("Knife") or bp:FindFirstChild("Gun"))) or 
-           (char and (char:FindFirstChild("Knife") or char:FindFirstChild("Gun"))) then
-            return false
-        end
-    end)
-    
-    -- Если ничего не сработало и монет мало — скорее всего лобби
-    return true
-end
-
--- ═══════════════════════════════════════════════════════════════
 -- GUI КНОПКА
 -- ═══════════════════════════════════════════════════════════════
 local screenGui = Instance.new("ScreenGui")
@@ -211,7 +137,6 @@ local CONFIG = {
     JUMP = 50,
     ESP_ENABLED = true,
     NOCLIP = true,
-    LOBBY_CHECK = true, -- Можно отключить если всё равно багует
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -294,27 +219,50 @@ local function addESP(part, text)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ
+-- ПОИСК МОНЕТ (УНИВЕРСАЛЬНЫЙ)
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
     local checked = {}
+    local debugNames = {}
     
-    -- Сканируем всю карту
+    -- Сканируем ВСЕ BasePart в Workspace
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("BasePart") or obj:IsA("MeshPart") then
-            if not checked[obj] then
-                checked[obj] = true
-                local n = obj.Name:lower()
-                if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or n:find("loot") or n:find("candy") then
-                    table.insert(coins, obj)
+        if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and not checked[obj] then
+            checked[obj] = true
+            local n = obj.Name:lower()
+            
+            -- Широкий поиск: любая маленькая деталька которая может быть монетой
+            if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or 
+               n:find("loot") or n:find("candy") or n:find("gold") or n:find("money") or
+               n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") then
+                table.insert(coins, obj)
+                table.insert(debugNames, obj.Name)
+            end
+            
+            -- Также проверяем по размеру (монеты обычно маленькие)
+            local size = obj.Size
+            if size.X < 3 and size.Y < 3 and size.Z < 3 and size.X > 0.1 then
+                if n:find("part") or n:find("mesh") or obj:IsA("MeshPart") then
+                    -- Возможно монета без понятного имени
+                    if not table.find(coins, obj) then
+                        -- Проверим есть ли у неё специфичные свойства
+                        if obj:FindFirstChild("TouchInterest") or obj:FindFirstChildOfClass("ProximityPrompt") then
+                            table.insert(coins, obj)
+                            table.insert(debugNames, "UNKNOWN:" .. obj.Name)
+                        end
+                    end
                 end
             end
         end
     end
     
-    -- Специфичные папки MM2
-    local folders = {"CoinSpawns", "Coins", "Loot", "Drops", "Map"}
+    -- Специфичные папки MM2 (все варианты)
+    local folders = {
+        "CoinSpawns", "Coins", "Loot", "Drops", "Map", 
+        "SpawnedCoins", "GameCoins", "Collectibles",
+        "Workspace", "Items", "Pickups"
+    }
     for _, folderName in ipairs(folders) do
         local folder = Workspace:FindFirstChild(folderName)
         if folder then
@@ -322,7 +270,22 @@ local function findCoins()
                 if obj:IsA("BasePart") and not checked[obj] then
                     checked[obj] = true
                     table.insert(coins, obj)
+                    table.insert(debugNames, "FOLDER:" .. obj.Name)
                 end
+            end
+        end
+    end
+    
+    -- Отладка: выводим что нашли
+    if #debugNames > 0 then
+        print("Найдено объектов: " .. #debugNames)
+        print("Имена: " .. table.concat(debugNames, ", "))
+    else
+        print("ОБЪЕКТЫ НЕ НАЙДЕНЫ! Сканирую все MeshPart...")
+        -- Если ничего не нашли — выводим ВСЕ MeshPart для анализа
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("MeshPart") and obj.Size.X < 5 then
+                print("MeshPart: " .. obj.Name .. " | Size: " .. tostring(obj.Size) .. " | Pos: " .. tostring(obj.Position))
             end
         end
     end
@@ -465,7 +428,7 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ
+-- ГЛАВНЫЙ ЦИКЛ (БЕЗ ПРОВЕРКИ ЛОББИ)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
@@ -474,14 +437,6 @@ local function farmLoop()
     
     while isRunning do
         if not isRunning then break end
-        
-        -- Проверка лобби (можно отключить в конфиге)
-        if CONFIG.LOBBY_CHECK and isInLobby() then
-            statusLabel.Text = "LOBBY"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
-            wait(2)
-            continue
-        end
         
         statusLabel.Text = "ON"
         statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
@@ -497,9 +452,12 @@ local function farmLoop()
         local murderer = getMurderer()
         
         if #coins == 0 then
-            wait(1)
+            print("Монеты не найдены, жду...")
+            wait(2)
             continue
         end
+        
+        print("Найдено монет: " .. #coins)
         
         for _, coin in ipairs(coins) do
             if not isRunning then break end
@@ -525,6 +483,7 @@ local function farmLoop()
             if collectCoin(coin) then
                 collected = collected + 1
                 processed[coin] = true
+                print("Собрано: " .. collected)
             end
             
             applySpeed()
@@ -654,5 +613,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm Fixed загружен.")
-print("Если всё равно показывает LOBBY — измени в конфиге LOBBY_CHECK = false")
+print("MM2 AutoFarm Debug загружен.")
+print("Нажми ▶ и смотри в консоль (F9) — там будут имена найденных объектов.")
