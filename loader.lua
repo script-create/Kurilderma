@@ -1,5 +1,5 @@
---// MM2 AutoFarm - No Size Check
---// Только имена, без проверки размеров
+--// MM2 AutoFarm - Final Working Version
+--// Имена монет: Coin_Server, CoinVisual, MainCoin
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -245,24 +245,21 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: ТОЛЬКО ИМЯ, БЕЗ РАЗМЕРОВ
+-- ПРОВЕРКА: ТОЛЬКО ТОЧНЫЕ ИМЕНА МОНЕТ
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
     if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
     
-    -- ТОЛЬКО ИМЯ, НИКАКИХ ПРОВЕРОК РАЗМЕРОВ
     local n = obj.Name
     if n ~= "Coin_Server" and n ~= "CoinVisual" and n ~= "MainCoin" then
         return false
     end
     
-    -- Не в магазине
     if isShopItem(obj) then
         return false
     end
     
-    -- Не часть персонажа
     if obj:IsDescendantOf(character) then
         return false
     end
@@ -271,7 +268,7 @@ local function isRealCoin(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (ТОЛЬКО ПО ИМЕНИ)
+-- ПОИСК МОНЕТ
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
@@ -600,5 +597,6 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm NoSizeCheck загружен.")
-print("Ищет: Coin_Server, CoinVisual, MainCoin | Без проверки размеров")
+print("MM2 AutoFarm FINAL загружен.")
+print("Монеты: Coin_Server, CoinVisual, MainCoin")
+print("Нажми ▶ для старта")
