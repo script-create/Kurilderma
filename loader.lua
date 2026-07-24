@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.4 - SPEED 20, COOLDOWN 0.1
+--// MM2 AutoFarm v2.5 - SPEED 16, нет уворотов
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -9,9 +9,6 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local player = Players.LocalPlayer
 
--- ═══════════════════════════════════════════════════════════════
--- РЕФЕРЕНСЫ
--- ═══════════════════════════════════════════════════════════════
 local character, humanoid, humanoidRootPart = nil, nil, nil
 
 local function updateCharacterRefs(newChar)
@@ -24,9 +21,6 @@ end
 
 updateCharacterRefs(player.Character or player.CharacterAdded:Wait())
 
--- ═══════════════════════════════════════════════════════════════
--- АНТИ-КИК
--- ═══════════════════════════════════════════════════════════════
 pcall(function()
 	local mt = getrawmetatable(game)
 	if mt then
@@ -53,9 +47,6 @@ pcall(function()
 	end)
 end)
 
--- ═══════════════════════════════════════════════════════════════
--- N O C L I P
--- ═══════════════════════════════════════════════════════════════
 local noclipConnection = nil
 
 local function enableNoclip()
@@ -77,9 +68,6 @@ local function disableNoclip()
 	end
 end
 
--- ═══════════════════════════════════════════════════════════════
--- GUI
--- ═══════════════════════════════════════════════════════════════
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "MM2AutoFarmGUI"
 screenGui.ResetOnSpawn = false
@@ -122,30 +110,21 @@ statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
--- ═══════════════════════════════════════════════════════════════
--- КОНФИГ
--- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
 	COOLDOWN = 0.1,
-	SPEED = 20,
+	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
 }
 
--- ═══════════════════════════════════════════════════════════════
--- СОСТОЯНИЕ
--- ═══════════════════════════════════════════════════════════════
 local isRunning = false
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
 
--- ═══════════════════════════════════════════════════════════════
--- УТИЛИТЫ
--- ═══════════════════════════════════════════════════════════════
 local function getDistance(p1, p2)
 	if not p1 or not p2 then return math.huge end
 	return (p1 - p2).Magnitude
@@ -159,9 +138,6 @@ local function isAliveCheck(plr)
 	return hum and hum.Health > 0
 end
 
--- ═══════════════════════════════════════════════════════════════
--- ESP
--- ═══════════════════════════════════════════════════════════════
 local function createESP()
 	if espFolder then espFolder:Destroy() end
 	espFolder = Instance.new("Folder")
@@ -189,9 +165,6 @@ local function addESP(part, text)
 	lbl.Parent = bb
 end
 
--- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА МОНЕТЫ
--- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
 	if not obj or not obj.Parent then return false end
 	if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
@@ -201,9 +174,6 @@ local function isRealCoin(obj)
 	return true
 end
 
--- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ
--- ═══════════════════════════════════════════════════════════════
 local function findCoins()
 	local coins = {}
 	for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -219,9 +189,6 @@ local function findCoins()
 	return coins
 end
 
--- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ
--- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
 	if not humanoidRootPart then return end
 	humanoidRootPart.CFrame = CFrame.new(pos)
@@ -236,9 +203,6 @@ local function tweenTo(pos)
 	tween.Completed:Wait()
 end
 
--- ═══════════════════════════════════════════════════════════════
--- АНТИ-AFK
--- ═══════════════════════════════════════════════════════════════
 local function startAntiAfk()
 	antiAfkConnection = RunService.Heartbeat:Connect(function(dt)
 		if not isRunning then return end
@@ -258,9 +222,6 @@ local function applySpeed()
 	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
--- ═══════════════════════════════════════════════════════════════
--- СБОР ОДНОЙ МОНЕТЫ
--- ═══════════════════════════════════════════════════════════════
 local function collectCoin(coin)
 	if not coin or not coin.Parent then return end
 	if not humanoidRootPart then return end
@@ -312,14 +273,10 @@ local function collectCoin(coin)
 	task.wait(CONFIG.COOLDOWN)
 end
 
--- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ
--- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
 	createESP()
 	
 	while isRunning do
-		-- ПАУЗА ПРИ СМЕРТИ
 		if not isAliveCheck(player) then
 			statusLabel.Text = "💀"
 			statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
@@ -355,9 +312,6 @@ local function farmLoop()
 	end
 end
 
--- ═══════════════════════════════════════════════════════════════
--- УПРАВЛЕНИЕ
--- ═══════════════════════════════════════════════════════════════
 function startFarm()
 	if isRunning then return end
 	isRunning = true
@@ -402,9 +356,6 @@ toggleButton.InputEnded:Connect(function(input)
 	end
 end)
 
--- ═══════════════════════════════════════════════════════════════
--- ОБНОВЛЕНИЕ ПРИ РЕСПАВНЕ
--- ═══════════════════════════════════════════════════════════════
 player.CharacterAdded:Connect(function(newChar)
 	updateCharacterRefs(newChar)
 	if isRunning then
@@ -417,7 +368,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
--- ═══════════════════════════════════════════════════════════════
--- СТАРТ
--- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm v2.4 загружен. SPEED=20 COOLDOWN=0.1")
+print("MM2 AutoFarm v2.5 загружен. SPEED=16")
