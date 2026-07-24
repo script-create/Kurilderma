@@ -1,5 +1,5 @@
---// MM2 AutoFarm - TouchInterest Only
---// Только объекты с TouchInterest и правильными именами
+--// MM2 AutoFarm - No TouchInterest Required
+--// Монеты в MM2 собираются через ProximityPrompt или RemoteEvents
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -245,26 +245,27 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПРОВЕРКА: ТОЛЬКО МОНЕТЫ С TOUCHINTEREST
+-- ПРОВЕРКА: МОНЕТА БЕЗ TouchInterest
 -- ═══════════════════════════════════════════════════════════════
 local function isRealCoin(obj)
     if not obj or not obj.Parent then return false end
     if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
     
-    -- ОБЯЗАТЕЛЬНО: должен быть TouchInterest (иначе нельзя собрать)
-    if not obj:FindFirstChild("TouchInterest") then
+    -- Размер: монеты в MM2 обычно 1.5-3 studs
+    local size = obj.Size
+    local maxSize = math.max(size.X, size.Y, size.Z)
+    if maxSize < 1.2 or maxSize > 5 then
         return false
     end
     
-    -- Размер: только нормальные монеты
-    local size = obj.Size
-    local maxSize = math.max(size.X, size.Y, size.Z)
-    if maxSize < 1 or maxSize > 6 then
+    -- Не слишком плоская (исключаем стены/пол)
+    local minSize = math.min(size.X, size.Y, size.Z)
+    if minSize < 0.5 then
         return false
     end
     
     -- Не полностью прозрачная
-    if obj.Transparency >= 1 then
+    if obj.Transparency >= 0.9 then
         return false
     end
     
@@ -278,46 +279,60 @@ local function isRealCoin(obj)
         return false
     end
     
+    -- Не anchored (монеты обычно не anchored)
+    if obj.Anchored then
+        -- Некоторые монеты anchored, так что не исключаем полностью
+        -- Но проверим дальше
+    end
+    
     return true
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ (ТОЛЬКО С TOUCHINTEREST)
+-- ПОИСК МОНЕТ (ТОЛЬКО ПО ИМЕНИ + РАЗМЕРУ)
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
     local checked = {}
     
-    -- Ищем ВСЕ объекты с TouchInterest в Workspace
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if not checked[obj] then
             checked[obj] = true
             
-            -- Сначала проверяем TouchInterest
-            if not obj:FindFirstChild("TouchInterest") then
-                continue
-            end
-            
-            -- Потом остальные проверки
             if not isRealCoin(obj) then
                 continue
             end
             
-            -- Проверяем имя — должно содержать монету
+            -- СТРОГИЙ ОТБОР ПО ИМЕНИ
             local n = obj.Name:lower()
-            if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or 
-               n:find("loot") or n:find("candy") or n:find("gold") or n:find("money") or
-               n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") then
+            
+            -- Точные совпадения с монетами
+            if n == "coin" or n == "coins" or 
+               n == "diamond" or n == "diamonds" or
+               n == "gem" or n == "gems" or
+               n == "gold" or n == "money" or
+               n == "candy" or n == "candies" or
+               n == "xp" or n == "exp" or
+               n == "loot" or n == "drop" or
+               n == "collectible" or n == "collectibles" then
+                table.insert(coins, obj)
+            end
+            
+            -- Частичные совпадения (только специфичные)
+            if n:find("coin_") or n:find("_coin") or
+               n:find("diamond_") or n:find("_diamond") or
+               n:find("gem_") or n:find("_gem") or
+               n:find("spawn_") or n:find("_spawn") or
+               n:find("collect_") or n:find("_collect") then
                 table.insert(coins, obj)
             end
         end
     end
     
-    -- Специфичные папки
+    -- Специфичные папки (без проверки имени, только isRealCoin)
     local folders = {
-        "CoinSpawns", "Coins", "Loot", "Drops", "Map", 
-        "SpawnedCoins", "GameCoins", "Collectibles",
-        "Items", "Pickups"
+        "CoinSpawns", "Coins", "Loot", "Drops",
+        "SpawnedCoins", "GameCoins", "Collectibles"
     }
     for _, folderName in ipairs(folders) do
         local folder = Workspace:FindFirstChild(folderName)
@@ -325,8 +340,7 @@ local function findCoins()
             for _, obj in ipairs(folder:GetDescendants()) do
                 if not checked[obj] then
                     checked[obj] = true
-                    -- В папках монет проверяем TouchInterest + isRealCoin
-                    if obj:FindFirstChild("TouchInterest") and isRealCoin(obj) then
+                    if isRealCoin(obj) then
                         table.insert(coins, obj)
                     end
                 end
@@ -652,5 +666,6 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm TouchOnly загружен.")
-print("Только объекты с TouchInterest + имя монеты + размер 1-6")
+print("MM2 AutoFarm NoTouchInt загружен.")
+print("Поиск по имени: coin, diamond, gem, gold, candy, xp, loot, drop")
+print("Размер: 1.2-5 studs | Не плоские | Не прозрачные")
