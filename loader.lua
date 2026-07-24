@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Smooth No Lag
---// Без перерывов, плавный сбор, без лагов
+--// MM2 AutoFarm - Phantom Coin Fix
+--// Проверяет что монета реальная: видимая, с TouchInterest, активная
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -126,7 +126,7 @@ statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
 -- ═══════════════════════════════════════════════════════════════
--- КОНФИГ (ПЛАВНЫЙ, БЕЗ ЛАГОВ)
+-- КОНФИГ
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
     COIN_TELEPORT_DIST = 6,
@@ -245,53 +245,92 @@ local function isShopItem(obj)
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ПОИСК МОНЕТ
+-- ПРОВЕРКА: РЕАЛЬНАЯ ЛИ МОНЕТА? (НОВОЕ - ФИКС ФАНТОМОВ)
+-- ═══════════════════════════════════════════════════════════════
+local function isRealCoin(obj)
+    if not obj or not obj.Parent then return false end
+    if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
+    
+    -- Должна быть видимая (не полностью прозрачная)
+    if obj.Transparency >= 0.9 then
+        return false
+    end
+    
+    -- Должна иметь TouchInterest (иначе нельзя собрать)
+    if not obj:FindFirstChild("TouchInterest") then
+        -- Или ProximityPrompt
+        if not obj:FindFirstChildOfClass("ProximityPrompt") then
+            return false
+        end
+    end
+    
+    -- Не должна быть в магазине
+    if isShopItem(obj) then
+        return false
+    end
+    
+    -- Должна быть не слишком маленькая и не слишком большая
+    local size = obj.Size
+    if size.X > 10 or size.Y > 10 or size.Z > 10 then
+        return false
+    end
+    if size.X < 0.1 or size.Y < 0.1 or size.Z < 0.1 then
+        return false
+    end
+    
+    -- Должна быть на нормальной высоте (не под картой)
+    if obj.Position.Y < -50 then
+        return false
+    end
+    
+    -- Проверка: не является ли частью персонажа
+    if obj:IsDescendantOf(character) then
+        return false
+    end
+    
+    return true
+end
+
+-- ═══════════════════════════════════════════════════════════════
+-- ПОИСК МОНЕТ (С ПРОВЕРКОЙ НА РЕАЛЬНОСТЬ)
 -- ═══════════════════════════════════════════════════════════════
 local function findCoins()
     local coins = {}
     local checked = {}
     
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and not checked[obj] then
+        if not checked[obj] then
             checked[obj] = true
             
-            if isShopItem(obj) then
+            -- Сначала проверяем что это реальная монета
+            if not isRealCoin(obj) then
                 continue
             end
             
             local n = obj.Name:lower()
             
+            -- Точные совпадения с монетами
             if n:find("coin") or n:find("diamond") or n:find("gem") or n:find("xp") or 
                n:find("loot") or n:find("candy") or n:find("gold") or n:find("money") or
                n:find("collect") or n:find("drop") or n:find("item") or n:find("spawn") then
                 table.insert(coins, obj)
             end
-            
-            local size = obj.Size
-            if size.X < 3 and size.Y < 3 and size.Z < 3 and size.X > 0.1 then
-                if n:find("part") or n:find("mesh") or obj:IsA("MeshPart") then
-                    if not table.find(coins, obj) then
-                        if obj:FindFirstChild("TouchInterest") or obj:FindFirstChildOfClass("ProximityPrompt") then
-                            table.insert(coins, obj)
-                        end
-                    end
-                end
-            end
         end
     end
     
+    -- Специфичные папки (тоже с проверкой)
     local folders = {
         "CoinSpawns", "Coins", "Loot", "Drops", "Map", 
         "SpawnedCoins", "GameCoins", "Collectibles",
-        "Workspace", "Items", "Pickups"
+        "Items", "Pickups"
     }
     for _, folderName in ipairs(folders) do
         local folder = Workspace:FindFirstChild(folderName)
         if folder then
             for _, obj in ipairs(folder:GetDescendants()) do
-                if obj:IsA("BasePart") and not checked[obj] then
-                    if not isShopItem(obj) then
-                        checked[obj] = true
+                if not checked[obj] then
+                    checked[obj] = true
+                    if isRealCoin(obj) then
                         table.insert(coins, obj)
                     end
                 end
@@ -308,7 +347,7 @@ local function findCoins()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ДВИЖЕНИЕ (ПЛАВНОЕ)
+-- ДВИЖЕНИЕ
 -- ═══════════════════════════════════════════════════════════════
 local function tpTo(pos)
     if not humanoidRootPart then return end
@@ -334,6 +373,11 @@ end
 -- ═══════════════════════════════════════════════════════════════
 local function collectCoin(coin)
     if not coin or not coin.Parent then return false end
+    
+    -- Ещё раз проверяем перед сбором
+    if not isRealCoin(coin) then
+        return false
+    end
     
     local coinPos = coin.Position
     local murderer = getMurderer()
@@ -430,7 +474,7 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (БЕЗ ПЕРЕРЫВОВ, БЕЗ ЛАГОВ)
+-- ГЛАВНЫЙ ЦИКЛ
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
@@ -613,4 +657,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm Smooth загружен. Без лагов, без перерывов.")
+print("MM2 AutoFarm PhantomFix загружен.")
+print("Фильтр: видимость, TouchInterest, размер, высота, магазин")
