@@ -1,5 +1,5 @@
---// MM2 AutoFarm - Stop on Death + Max 50 Coins + No Drag
---// Останавливается после смерти, 50 монет макс, кнопка фиксирована
+--// MM2 AutoFarm - Coin Bag Counter + Stop on Death + Max 50
+--// Считает по мешку монет, стоп после смерти, 50 макс, без перетаскивания
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -147,7 +147,43 @@ local isRunning = false
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
-local coinsCollected = 0
+
+-- ═══════════════════════════════════════════════════════════════
+-- СЧЁТЧИК МОНЕТ ПО МЕШКУ (GUI)
+-- ═══════════════════════════════════════════════════════════════
+local function getCoinCount()
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return 0 end
+    
+    -- Ищем мешок с монетами (обычно внизу экрана)
+    for _, gui in ipairs(pg:GetDescendants()) do
+        if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+            local text = gui.Text
+            -- Ищем число рядом с иконкой монеты или $
+            if text and text:find("%d+") then
+                local num = tonumber(text:match("%d+"))
+                if num and num >= 0 and num <= 100 then
+                    return num
+                end
+            end
+        end
+    end
+    
+    -- Альтернатива: ищем специфичные имена GUI монет
+    for _, gui in ipairs(pg:GetDescendants()) do
+        if gui.Name:lower():find("coin") or gui.Name:lower():find("money") or gui.Name:lower():find("bag") then
+            if gui:IsA("TextLabel") and gui.Text then
+                local num = tonumber(gui.Text:match("%d+"))
+                if num then return num end
+            end
+        end
+    end
+    
+    return 0
+end
+
+local startCoinCount = 0
+local lastCoinCount = 0
 
 -- ═══════════════════════════════════════════════════════════════
 -- УТИЛИТЫ
@@ -375,12 +411,16 @@ local function applySpeed()
 end
 
 -- ═══════════════════════════════════════════════════════════════
--- ГЛАВНЫЙ ЦИКЛ (СТОП ПОСЛЕ СМЕРТИ + 50 МОНЕТ)
+-- ГЛАВНЫЙ ЦИКЛ (СЧЁТ ПО МЕШКУ + СТОП ПОСЛЕ СМЕРТИ + 50 МАКС)
 -- ═══════════════════════════════════════════════════════════════
 local function farmLoop()
     createESP()
     local processed = {}
-    coinsCollected = 0
+    
+    -- Запоминаем стартовое количество монет
+    startCoinCount = getCoinCount()
+    lastCoinCount = startCoinCount
+    print("Стартовый счёт монет: " .. startCoinCount)
     
     while isRunning do
         if not isRunning then break end
@@ -392,15 +432,21 @@ local function farmLoop()
             return
         end
         
-        -- СТОП ЕСЛИ 50 МОНЕТ
-        if coinsCollected >= CONFIG.MAX_COINS then
-            print("Собрано " .. CONFIG.MAX_COINS .. " монет — остановка")
+        -- ПРОВЕРКА СЧЁТЧИКА МОНЕТ
+        local currentCoins = getCoinCount()
+        local coinsEarned = currentCoins - startCoinCount
+        
+        -- Обновляем статус
+        statusLabel.Text = tostring(coinsEarned) .. "/50"
+        
+        -- СТОП ЕСЛИ 50 МОНЕТ СОБРАНО
+        if coinsEarned >= CONFIG.MAX_COINS then
+            print("Собрано " .. coinsEarned .. " монет — остановка")
             stopFarm()
             return
         end
         
-        statusLabel.Text = tostring(coinsCollected) .. "/50"
-        statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
+        lastCoinCount = currentCoins
         
         local allCoins = findCoins()
         local murderer = getMurderer()
@@ -431,9 +477,13 @@ local function farmLoop()
                 return
             end
             
-            -- СТОП ЕСЛИ 50 МОНЕТ
-            if coinsCollected >= CONFIG.MAX_COINS then
-                print("Собрано " .. CONFIG.MAX_COINS .. " монет — остановка")
+            -- ПРОВЕРКА СЧЁТЧИКА
+            local current = getCoinCount()
+            local earned = current - startCoinCount
+            statusLabel.Text = tostring(earned) .. "/50"
+            
+            if earned >= CONFIG.MAX_COINS then
+                print("Собрано " .. earned .. " монет — остановка")
                 stopFarm()
                 return
             end
@@ -452,11 +502,7 @@ local function farmLoop()
                 addESP(coin, "💰")
             end
             
-            if collectCoin(coin) then
-                coinsCollected = coinsCollected + 1
-                print("Собрано: " .. coinsCollected .. "/50")
-            end
-            
+            collectCoin(coin)
             processed[coin] = true
             applySpeed()
         end
@@ -477,7 +523,9 @@ end
 local function startFarm()
     if isRunning then return end
     isRunning = true
-    coinsCollected = 0
+    
+    startCoinCount = getCoinCount()
+    lastCoinCount = startCoinCount
     
     toggleButton.Text = "⏸"
     statusLabel.Text = "0/50"
@@ -548,7 +596,6 @@ player.CharacterAdded:Connect(function(newChar)
     humanoid = newChar:WaitForChild("Humanoid")
     humanoidRootPart = newChar:WaitForChild("HumanoidRootPart")
     
-    -- Остановка при респавне (смерть)
     if isRunning then
         print("Респавн — остановка фарма")
         stopFarm()
@@ -558,5 +605,5 @@ end)
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm DeathStop загружен.")
-print("Стоп после смерти | Макс 50 монет | Кнопка фиксирована")
+print("MM2 AutoFarm BagCounter загружен.")
+print("Счёт по мешку | Стоп после смерти | 50 макс | Кнопка фиксирована")
