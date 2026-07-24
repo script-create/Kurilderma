@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.1 - Чистый фарм, пауза при смерти, продолжение после респавна
+--// MM2 AutoFarm v2.2 - Оптимизированный, без лагов
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -33,31 +33,22 @@ pcall(function()
 		local oldNamecall = mt.__namecall
 		local oldIndex = mt.__index
 		setreadonly(mt, false)
-		
 		mt.__namecall = newcclosure(function(self, ...)
 			local method = getnamecallmethod()
-			if method == "Kick" or method == "kick" then
-				return nil
-			end
+			if method == "Kick" or method == "kick" then return nil end
 			return oldNamecall(self, ...)
 		end)
-		
 		mt.__index = newcclosure(function(self, key)
-			if key == "Kick" or key == "kick" then
-				return function() end
-			end
+			if key == "Kick" or key == "kick" then return function() end end
 			return oldIndex(self, key)
 		end)
-		
 		setreadonly(mt, true)
 	end
 end)
 
 pcall(function()
 	local oldKick = hookfunction(player.Kick, function(self, ...)
-		if self == player then
-			return nil
-		end
+		if self == player then return nil end
 		return oldKick(self, ...)
 	end)
 end)
@@ -72,23 +63,16 @@ local function enableNoclip()
 	noclipConnection = RunService.Stepped:Connect(function()
 		if not character then return end
 		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = false
-			end
+			if part:IsA("BasePart") then part.CanCollide = false end
 		end
 	end)
 end
 
 local function disableNoclip()
-	if noclipConnection then
-		noclipConnection:Disconnect()
-		noclipConnection = nil
-	end
+	if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end
 	if character then
 		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = true
-			end
+			if part:IsA("BasePart") then part.CanCollide = true end
 		end
 	end
 end
@@ -143,12 +127,13 @@ statusLabel.Parent = mainFrame
 -- ═══════════════════════════════════════════════════════════════
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.08,
-	SPEED = 20,
+	COOLDOWN = 0.05,
+	SPEED = 25,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
-	NEAR_RADIUS = 200,
+	NEAR_RADIUS = 300,
+	CACHE_INTERVAL = 1, -- секунда между обновлениями кеша монет
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -188,7 +173,6 @@ end
 local function addESP(part, text)
 	if not part or not part.Parent then return end
 	if part:FindFirstChild("CoinESP_Billboard") then return end
-	
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "CoinESP_Billboard"
 	bb.AlwaysOnTop = true
@@ -196,7 +180,6 @@ local function addESP(part, text)
 	bb.StudsOffset = Vector3.new(0, 1.5, 0)
 	bb.Adornee = part
 	bb.Parent = espFolder
-	
 	local lbl = Instance.new("TextLabel")
 	lbl.Size = UDim2.new(1, 0, 1, 0)
 	lbl.BackgroundTransparency = 1
@@ -213,17 +196,31 @@ end
 local function isRealCoin(obj)
 	if not obj or not obj.Parent then return false end
 	if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
-	
 	local n = obj.Name
-	if n ~= "Coin_Server" and n ~= "CoinVisual" and n ~= "MainCoin" and n ~= "Coin" then
-		return false
-	end
-	
-	if character and obj:IsDescendantOf(character) then
-		return false
-	end
-	
+	if n ~= "Coin_Server" and n ~= "CoinVisual" and n ~= "MainCoin" and n ~= "Coin" then return false end
+	if character and obj:IsDescendantOf(character) then return false end
 	return true
+end
+
+-- ═══════════════════════════════════════════════════════════════
+-- КЕШ МОНЕТ (обновляется раз в секунду, не каждый кадр)
+-- ═══════════════════════════════════════════════════════════════
+local cachedCoins = {}
+local lastCacheUpdate = 0
+
+local function updateCoinCache()
+	cachedCoins = {}
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if isRealCoin(obj) then
+			table.insert(cachedCoins, obj)
+		end
+	end
+	if humanoidRootPart then
+		table.sort(cachedCoins, function(a, b)
+			return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
+		end)
+	end
+	lastCacheUpdate = tick()
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -237,13 +234,8 @@ end
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
 	local dist = getDistance(humanoidRootPart.Position, pos)
-	if dist < 2 then
-		tpTo(pos)
-		return
-	end
-	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 25, 2), Enum.EasingStyle.Linear), {
-		CFrame = CFrame.new(pos)
-	})
+	if dist < 2 then tpTo(pos); return end
+	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 30, 1.5), Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
 	tween:Play()
 	tween.Completed:Wait()
 end
@@ -263,17 +255,11 @@ local function startAntiAfk()
 end
 
 local function stopAntiAfk()
-	if antiAfkConnection then
-		antiAfkConnection:Disconnect()
-		antiAfkConnection = nil
-	end
+	if antiAfkConnection then antiAfkConnection:Disconnect(); antiAfkConnection = nil end
 end
 
 local function applySpeed()
-	if humanoid then
-		humanoid.WalkSpeed = CONFIG.SPEED
-		humanoid.JumpPower = CONFIG.JUMP
-	end
+	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
 -- ═══════════════════════════════════════════════════════════════
@@ -289,13 +275,8 @@ local function farmLoop()
 			statusLabel.Text = "💀"
 			statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
 			if noclipConnection then disableNoclip() end
-			
-			while isRunning and not isAliveCheck(player) do
-				task.wait(0.5)
-			end
-			
+			while isRunning and not isAliveCheck(player) do task.wait(0.5) end
 			if not isRunning then return end
-			
 			local newChar = player.Character
 			if newChar then
 				updateCharacterRefs(newChar)
@@ -306,30 +287,17 @@ local function farmLoop()
 			end
 		end
 		
-		if not humanoidRootPart then
-			task.wait(0.5)
-			continue
+		if not humanoidRootPart then task.wait(0.5); continue end
+		
+		-- ОБНОВЛЯЕМ КЕШ РАЗ В СЕКУНДУ
+		if tick() - lastCacheUpdate >= CONFIG.CACHE_INTERVAL then
+			updateCoinCache()
 		end
 		
-		-- ПОИСК МОНЕТ
-		local coins = {}
-		for _, obj in ipairs(Workspace:GetDescendants()) do
-			if isRealCoin(obj) then
-				table.insert(coins, obj)
-			end
-		end
+		if #cachedCoins == 0 then task.wait(0.3); continue end
 		
-		table.sort(coins, function(a, b)
-			return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
-		end)
-		
-		if #coins == 0 then
-			task.wait(0.3)
-			continue
-		end
-		
-		-- СБОР
-		for _, coin in ipairs(coins) do
+		-- СБОР БЛИЖАЙШИХ
+		for i, coin in ipairs(cachedCoins) do
 			if not isRunning then break end
 			if not isAliveCheck(player) then break end
 			if not humanoidRootPart then break end
@@ -340,9 +308,7 @@ local function farmLoop()
 			local dist = getDistance(humanoidRootPart.Position, coin.Position)
 			if dist > CONFIG.NEAR_RADIUS then continue end
 			
-			if CONFIG.ESP_ENABLED then
-				addESP(coin, "💰")
-			end
+			if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 			
 			if dist > CONFIG.COIN_TELEPORT_DIST then
 				tweenTo(coin.Position)
@@ -350,11 +316,11 @@ local function farmLoop()
 				tpTo(coin.Position)
 			end
 			
-			task.wait(0.05)
+			task.wait(0.03)
 			
 			pcall(function()
 				firetouchinterest(humanoidRootPart, coin, 0)
-				task.wait(0.03)
+				task.wait(0.02)
 				firetouchinterest(humanoidRootPart, coin, 1)
 			end)
 			
@@ -387,13 +353,13 @@ local function farmLoop()
 		-- Чистка processed
 		for id, _ in pairs(processed) do
 			local exists = false
-			for _, obj in ipairs(Workspace:GetDescendants()) do
+			for _, obj in ipairs(cachedCoins) do
 				if tostring(obj) == id then exists = true; break end
 			end
 			if not exists then processed[id] = nil end
 		end
 		
-		task.wait(0.1)
+		task.wait(0.05)
 	end
 end
 
@@ -403,22 +369,17 @@ end
 function startFarm()
 	if isRunning then return end
 	isRunning = true
-	
+	updateCoinCache()
 	toggleButton.Text = "⏸"
 	statusLabel.Text = "▶"
 	statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
 	stroke.Color = Color3.fromRGB(50, 255, 50)
-	
 	if CONFIG.NOCLIP then enableNoclip() end
 	startAntiAfk()
 	applySpeed()
-	
 	task.spawn(function()
 		local ok, err = pcall(farmLoop)
-		if not ok then
-			warn("[MM2AF] Ошибка: " .. tostring(err))
-			stopFarm()
-		end
+		if not ok then warn("[MM2AF] Ошибка: " .. tostring(err)); stopFarm() end
 	end)
 end
 
@@ -426,27 +387,15 @@ function stopFarm()
 	isRunning = false
 	stopAntiAfk()
 	disableNoclip()
-	
 	toggleButton.Text = "▶"
 	statusLabel.Text = "OFF"
 	statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
 	stroke.Color = Color3.fromRGB(255, 50, 50)
-	
-	if espFolder then
-		espFolder:Destroy()
-		espFolder = nil
-	end
+	if espFolder then espFolder:Destroy(); espFolder = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
--- КЛИК ПО КНОПКЕ
--- ═══════════════════════════════════════════════════════════════
 toggleButton.MouseButton1Click:Connect(function()
-	if isRunning then
-		stopFarm()
-	else
-		startFarm()
-	end
+	if isRunning then stopFarm() else startFarm() end
 end)
 
 local pressStart = 0
@@ -458,10 +407,7 @@ end)
 
 toggleButton.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-		if tick() - pressStart >= 1.5 then
-			stopFarm()
-			screenGui:Destroy()
-		end
+		if tick() - pressStart >= 1.5 then stopFarm(); screenGui:Destroy() end
 	end
 end)
 
@@ -477,14 +423,10 @@ player.CharacterAdded:Connect(function(newChar)
 end)
 
 player.CharacterRemoving:Connect(function()
-	if isRunning then
-		statusLabel.Text = "💀"
-		statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
-	end
+	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
 -- ═══════════════════════════════════════════════════════════════
 -- СТАРТ
 -- ═══════════════════════════════════════════════════════════════
-print("MM2 AutoFarm v2.1 загружен.")
-print("Чистый фарм | Пауза при смерти | Без лимита")
+print("MM2 AutoFarm v2.2 загружен. Оптимизированный.")
