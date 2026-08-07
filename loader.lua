@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.9 - COOLDOWN 0.02
+--// MM2 AutoFarm v2.9 Fast Edition
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -110,15 +110,17 @@ statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
+--// УСКОРЕННЫЕ НАСТРОЙКИ
 local CONFIG = {
-	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.02,
+	COIN_TELEPORT_DIST = 8,      -- дистанция для мгновенного телепорта (было 3)
+	COOLDOWN = 0.02,             -- почти нулевой кулдаун (было 0.15)
 	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
-	MAX_Y_DIFF = 15,
+	MAX_Y_DIFF = 25,             -- больше разница по Y чтобы не огибал
+	TWEEN_SPEED = 70,            -- скорость твина (было dist/17)
 }
 
 local isRunning = false
@@ -195,20 +197,24 @@ local function tpTo(pos)
 	humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
+--// БЫСТРЫЙ ТВИН БЕЗ ОЖИДАНИЯ ЗАВЕРШЕНИЯ
+local currentTween = nil
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
 	local currentPos = humanoidRootPart.Position
 	local dist = getDistance(currentPos, pos)
-	if dist < 2 then tpTo(pos); return end
+	if dist < CONFIG.COIN_TELEPORT_DIST then tpTo(pos); return end
 	
 	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
 	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
-	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 17, 3), Enum.EasingStyle.Linear), {
+	local duration = math.max(dist / CONFIG.TWEEN_SPEED, 0.05)
+	
+	if currentTween then currentTween:Cancel() end
+	currentTween = TweenService:Create(humanoidRootPart, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
 		CFrame = CFrame.new(safePos)
 	})
-	tween:Play()
-	tween.Completed:Wait()
+	currentTween:Play()
 end
 
 local function startAntiAfk()
@@ -230,6 +236,7 @@ local function applySpeed()
 	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
+--// УСКОРЕННЫЙ СБОР — МИНИМУМ ЗАДЕРЖЕК
 local function collectCoin(coin)
 	if not coin or not coin.Parent then return end
 	if not humanoidRootPart then return end
@@ -242,17 +249,12 @@ local function collectCoin(coin)
 	
 	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 	
-	if dist > CONFIG.COIN_TELEPORT_DIST then
-		tweenTo(coinPos)
-	else
-		tpTo(coinPos)
-	end
+	-- Сразу летим к монете, не ждём
+	tweenTo(coinPos)
 	
-	task.wait(0.03)
-	
+	-- Мгновенный сбор — все методы сразу
 	pcall(function()
 		firetouchinterest(humanoidRootPart, coin, 0)
-		task.wait(0.02)
 		firetouchinterest(humanoidRootPart, coin, 1)
 	end)
 	
@@ -278,7 +280,6 @@ local function collectCoin(coin)
 	end)
 	
 	applySpeed()
-	task.wait(CONFIG.COOLDOWN)
 end
 
 local function farmLoop()
@@ -289,7 +290,7 @@ local function farmLoop()
 			statusLabel.Text = "💀"
 			statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0)
 			if noclipConnection then disableNoclip() end
-			while isRunning and not isAliveCheck(player) do task.wait(0.5) end
+			while isRunning and not isAliveCheck(player) do task.wait(0.2) end
 			if not isRunning then return end
 			local newChar = player.Character
 			if newChar then
@@ -301,12 +302,12 @@ local function farmLoop()
 			end
 		end
 		
-		if not humanoidRootPart then task.wait(0.5); continue end
+		if not humanoidRootPart then task.wait(0.1); continue end
 		
 		local coins = findCoins()
 		
 		if #coins == 0 then
-			task.wait(0.5)
+			task.wait(0.1)
 			continue
 		end
 		
@@ -314,9 +315,8 @@ local function farmLoop()
 			if not isRunning then break end
 			if not isAliveCheck(player) then break end
 			collectCoin(coin)
+			task.wait(CONFIG.COOLDOWN) -- минимальная пауза между монетами
 		end
-		
-		task.wait(0.1)
 	end
 end
 
@@ -338,6 +338,7 @@ end
 
 function stopFarm()
 	isRunning = false
+	if currentTween then currentTween:Cancel(); currentTween = nil end
 	stopAntiAfk()
 	disableNoclip()
 	toggleButton.Text = "▶"
@@ -376,4 +377,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.9 - COOLdaynOWN 0.02")
+print("MM2 AutoFarm v2.9 Fast загружен. Минимальные задержки, скорость твина 70")
