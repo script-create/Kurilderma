@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.9 Near Only
+--// MM2 AutoFarm v2.9 Fast Safe
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -110,16 +110,16 @@ statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
---// НАСТРОЙКИ — ТОЛЬКО БЛИЖАЙШИЕ МОНЕТЫ
+--// НАСТРОЙКИ — БЫСТРО, НО БЕЗ КИКА
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.05,             -- минимум между монетами
+	COOLDOWN = 0.01,
 	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
-	NEAR_RADIUS = 40,            -- только ближайшие 40 studs (было 500)
-	MAX_Y_DIFF = 5,              -- не сильно вверх/вниз
+	NEAR_RADIUS = 55,            -- ← изменено: было 500, теперь 55
+	MAX_Y_DIFF = 3,
 }
 
 local isRunning = false
@@ -176,7 +176,7 @@ local function isRealCoin(obj)
 	return true
 end
 
---// ИЩЕМ ТОЛЬКО БЛИЖАЙШИЕ МОНЕТЫ
+--// ИЩЕМ ТОЛЬКО БЛИЖАЙШИЕ МОНЕТЫ (в радиусе NEAR_RADIUS)
 local function findCoins()
 	local coins = {}
 	if not humanoidRootPart then return coins end
@@ -184,24 +184,17 @@ local function findCoins()
 	local myPos = humanoidRootPart.Position
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if isRealCoin(obj) then
-			local d = getDistance(myPos, obj.Position)
-			if d <= CONFIG.NEAR_RADIUS then
-				table.insert(coins, {coin = obj, dist = d})
+			if getDistance(myPos, obj.Position) <= CONFIG.NEAR_RADIUS then
+				table.insert(coins, obj)
 			end
 		end
 	end
 	
-	-- Сортируем по расстоянию
 	table.sort(coins, function(a, b)
-		return a.dist < b.dist
+		return getDistance(humanoidRootPart.Position, a.Position) < getDistance(humanoidRootPart.Position, b.Position)
 	end)
 	
-	-- Возвращаем только объекты
-	local result = {}
-	for _, v in ipairs(coins) do
-		table.insert(result, v.coin)
-	end
-	return result
+	return coins
 end
 
 local function tpTo(pos)
@@ -209,7 +202,7 @@ local function tpTo(pos)
 	humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
---// ОРИГИНАЛЬНЫЙ ТВИН — НЕ ТРОГАЛ
+--// ТВИН С ОРИГИНАЛЬНОЙ СКОРОСТЬЮ (dist / 17) — НЕ КИКАЕТ
 local currentTween = nil
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
@@ -223,6 +216,7 @@ local function tweenTo(pos)
 	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
 	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
+	-- Оригинальная скорость: dist / 17, макс 3 сек
 	local duration = math.min(dist / 17, 3)
 	
 	if currentTween then currentTween:Cancel() end
@@ -232,7 +226,7 @@ local function tweenTo(pos)
 	currentTween:Play()
 	currentTween.Completed:Wait()
 	
-	-- Дотелепорт если чуть не долетел
+	-- Если после твина всё ещё не достаточно близко — дотелепортируем
 	if getDistance(humanoidRootPart.Position, pos) > 2 then
 		tpTo(pos)
 	end
@@ -257,7 +251,7 @@ local function applySpeed()
 	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
---// СБОР — ДОЛЕТАЕМ, ПОТОМ СОБИРАЕМ
+--// СБОР — СНАЧАЛА ДОЛЕТАЕМ, ПОТОМ СОБИРАЕМ
 local function collectCoin(coin)
 	if not coin or not coin.Parent then return end
 	if not humanoidRootPart then return end
@@ -270,8 +264,10 @@ local function collectCoin(coin)
 	
 	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 	
+	-- Долетаем до монетки (оригинальная скорость, не кикает)
 	tweenTo(coinPos)
 	
+	-- Собираем всеми способами
 	pcall(function()
 		firetouchinterest(humanoidRootPart, coin, 0)
 		firetouchinterest(humanoidRootPart, coin, 1)
@@ -326,7 +322,7 @@ local function farmLoop()
 		local coins = findCoins()
 		
 		if #coins == 0 then
-			task.wait(0.2)
+			task.wait(0.1)
 			continue
 		end
 		
@@ -396,4 +392,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.9 Near Only загружен. Радиус 40, только ближайшие монеты.")
+print("MM2 AutoFarm v2.9 Fast Safe загружен. Радиус поиска: " .. CONFIG.NEAR_RADIUS)
