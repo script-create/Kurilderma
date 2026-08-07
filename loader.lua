@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.9 Fast Edition
+--// MM2 AutoFarm v2.9 Fast Safe
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -110,17 +110,16 @@ statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
---// УСКОРЕННЫЕ НАСТРОЙКИ
+--// НАСТРОЙКИ — БЫСТРО, НО БЕЗ КИКА
 local CONFIG = {
-	COIN_TELEPORT_DIST = 3,      -- вернул обратно на 3
-	COOLDOWN = 0.02,             -- почти нулевой кулдаун
+	COIN_TELEPORT_DIST = 3,
+	COOLDOWN = 0.01,
 	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
-	MAX_Y_DIFF = 25,
-	TWEEN_SPEED = 70,
+	MAX_Y_DIFF = 3,
 }
 
 local isRunning = false
@@ -197,24 +196,34 @@ local function tpTo(pos)
 	humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
---// БЫСТРЫЙ ТВИН БЕЗ ОЖИДАНИЯ ЗАВЕРШЕНИЯ
+--// ТВИН С ОРИГИНАЛЬНОЙ СКОРОСТЬЮ (dist / 17) — НЕ КИКАЕТ
 local currentTween = nil
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
 	local currentPos = humanoidRootPart.Position
 	local dist = getDistance(currentPos, pos)
-	if dist < CONFIG.COIN_TELEPORT_DIST then tpTo(pos); return end
+	if dist < CONFIG.COIN_TELEPORT_DIST then
+		tpTo(pos)
+		return
+	end
 	
 	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
 	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
-	local duration = math.max(dist / CONFIG.TWEEN_SPEED, 0.05)
+	-- Оригинальная скорость: dist / 17, макс 3 сек
+	local duration = math.min(dist / 17, 3)
 	
 	if currentTween then currentTween:Cancel() end
 	currentTween = TweenService:Create(humanoidRootPart, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
 		CFrame = CFrame.new(safePos)
 	})
 	currentTween:Play()
+	currentTween.Completed:Wait()
+	
+	-- Если после твина всё ещё не достаточно близко — дотелепортируем
+	if getDistance(humanoidRootPart.Position, pos) > 2 then
+		tpTo(pos)
+	end
 end
 
 local function startAntiAfk()
@@ -236,7 +245,7 @@ local function applySpeed()
 	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
---// УСКОРЕННЫЙ СБОР — МИНИМУМ ЗАДЕРЖЕК
+--// СБОР — СНАЧАЛА ДОЛЕТАЕМ, ПОТОМ СОБИРАЕМ
 local function collectCoin(coin)
 	if not coin or not coin.Parent then return end
 	if not humanoidRootPart then return end
@@ -249,8 +258,10 @@ local function collectCoin(coin)
 	
 	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 	
+	-- Долетаем до монетки (оригинальная скорость, не кикает)
 	tweenTo(coinPos)
 	
+	-- Собираем всеми способами
 	pcall(function()
 		firetouchinterest(humanoidRootPart, coin, 0)
 		firetouchinterest(humanoidRootPart, coin, 1)
@@ -375,4 +386,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.9 Fast загружен. COIN_TELEPORT_DIST=3, скорость твина 70")
+print("MM2 AutoFarm v2.9 Fast Safe загружен. Скорость твина dist/17, не кикает.")
