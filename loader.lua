@@ -112,15 +112,15 @@ statusLabel.Parent = mainFrame
 
 --// УСКОРЕННЫЕ НАСТРОЙКИ
 local CONFIG = {
-	COIN_TELEPORT_DIST = 8,      -- дистанция для мгновенного телепорта (было 3)
-	COOLDOWN = 0.02,             -- почти нулевой кулдаун (было 0.15)
+	COIN_TELEPORT_DIST = 3,      -- вернул обратно на 3
+	COOLDOWN = 0.02,             -- почти нулевой кулдаун
 	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
-	MAX_Y_DIFF = 25,             -- больше разница по Y чтобы не огибал
-	TWEEN_SPEED = 70,            -- скорость твина (было dist/17)
+	MAX_Y_DIFF = 25,
+	TWEEN_SPEED = 70,
 }
 
 local isRunning = false
@@ -249,10 +249,8 @@ local function collectCoin(coin)
 	
 	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 	
-	-- Сразу летим к монете, не ждём
 	tweenTo(coinPos)
 	
-	-- Мгновенный сбор — все методы сразу
 	pcall(function()
 		firetouchinterest(humanoidRootPart, coin, 0)
 		firetouchinterest(humanoidRootPart, coin, 1)
@@ -315,7 +313,7 @@ local function farmLoop()
 			if not isRunning then break end
 			if not isAliveCheck(player) then break end
 			collectCoin(coin)
-			task.wait(CONFIG.COOLDOWN) -- минимальная пауза между монетами
+			task.wait(CONFIG.COOLDOWN)
 		end
 	end
 end
@@ -377,4 +375,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.9 Fast загружен. Минимальные задержки, скорость твина 70")
+print("MM2 AutoFarm v2.9 Fast загружен. COIN_TELEPORT_DIST=3, скорость твина 70")
