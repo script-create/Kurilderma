@@ -1,4 +1,4 @@
---// MM2 AutoFarm v3 - Фикс полёта вверх
+--// MM2 AutoFarm v2.9 - COOLDOWN 0.02
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -112,20 +112,19 @@ statusLabel.Parent = mainFrame
 
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
-	COOLDOWN = 0.15,
+	COOLDOWN = 0.02,
 	SPEED = 16,
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
 	NEAR_RADIUS = 500,
-	MAX_Y_DIFF = 5, -- Было 15, теперь 5 — не взлетает
+	MAX_Y_DIFF = 15,
 }
 
 local isRunning = false
 local espFolder = nil
 local antiAfkConnection = nil
 local afkTimer = 0
-local groundY = nil -- Фикс: запоминаем землю
 
 local function getDistance(p1, p2)
 	if not p1 or not p2 then return math.huge end
@@ -193,9 +192,7 @@ end
 
 local function tpTo(pos)
 	if not humanoidRootPart then return end
-	-- Фикс: Y всегда на земле
-	local y = groundY or pos.Y
-	humanoidRootPart.CFrame = CFrame.new(pos.X, y, pos.Z)
+	humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
 local function tweenTo(pos)
@@ -204,9 +201,8 @@ local function tweenTo(pos)
 	local dist = getDistance(currentPos, pos)
 	if dist < 2 then tpTo(pos); return end
 	
-	-- Фикс: Y не меняется сильно
-	local y = groundY or pos.Y
-	local safePos = Vector3.new(pos.X, y, pos.Z)
+	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
+	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
 	local tween = TweenService:Create(humanoidRootPart, TweenInfo.new(math.min(dist / 17, 3), Enum.EasingStyle.Linear), {
 		CFrame = CFrame.new(safePos)
@@ -288,11 +284,6 @@ end
 local function farmLoop()
 	createESP()
 	
-	-- Фикс: запоминаем землю при старте
-	if humanoidRootPart then
-		groundY = humanoidRootPart.Position.Y
-	end
-	
 	while isRunning do
 		if not isAliveCheck(player) then
 			statusLabel.Text = "💀"
@@ -303,7 +294,6 @@ local function farmLoop()
 			local newChar = player.Character
 			if newChar then
 				updateCharacterRefs(newChar)
-				groundY = humanoidRootPart.Position.Y -- Обновляем землю
 				statusLabel.Text = "▶"
 				statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
 				if CONFIG.NOCLIP then enableNoclip() end
@@ -312,11 +302,6 @@ local function farmLoop()
 		end
 		
 		if not humanoidRootPart then task.wait(0.5); continue end
-		
-		-- Фикс: если улетели — возвращаем
-		if groundY and math.abs(humanoidRootPart.Position.Y - groundY) > 10 then
-			humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position.X, groundY, humanoidRootPart.Position.Z)
-		end
 		
 		local coins = findCoins()
 		
@@ -338,7 +323,6 @@ end
 function startFarm()
 	if isRunning then return end
 	isRunning = true
-	groundY = humanoidRootPart and humanoidRootPart.Position.Y -- Фикс
 	toggleButton.Text = "⏸"
 	statusLabel.Text = "▶"
 	statusLabel.TextColor3 = Color3.fromRGB(50, 255, 50)
@@ -354,7 +338,6 @@ end
 
 function stopFarm()
 	isRunning = false
-	groundY = nil -- Сброс
 	stopAntiAfk()
 	disableNoclip()
 	toggleButton.Text = "▶"
@@ -383,7 +366,6 @@ end)
 
 player.CharacterAdded:Connect(function(newChar)
 	updateCharacterRefs(newChar)
-	groundY = humanoidRootPart and humanoidRootPart.Position.Y -- Обновляем
 	if isRunning then
 		if CONFIG.NOCLIP then enableNoclip() end
 		applySpeed()
@@ -394,4 +376,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v3 Fixed - No flying up.")
+print("MM2 AutoFarm v2.9 - COOLdaynOWN 0.02")
