@@ -1,4 +1,4 @@
---// MM2 AutoFarm v2.9 Fast Safe
+--// MM2 AutoFarm v2.9 Fast Safe — Fix: не гонится за собранными монетками
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -110,7 +110,6 @@ statusLabel.TextSize = 16
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Parent = mainFrame
 
---// НАСТРОЙКИ — БЫСТРО, НО БЕЗ КИКА
 local CONFIG = {
 	COIN_TELEPORT_DIST = 3,
 	COOLDOWN = 0.01,
@@ -118,7 +117,7 @@ local CONFIG = {
 	JUMP = 50,
 	ESP_ENABLED = true,
 	NOCLIP = true,
-	NEAR_RADIUS = 55,            -- ← изменено: было 500, теперь 55
+	NEAR_RADIUS = 55,
 	MAX_Y_DIFF = 3,
 }
 
@@ -167,16 +166,23 @@ local function addESP(part, text)
 	lbl.Parent = bb
 end
 
+--// ПРОВЕРКА: монетка не собрана и не летит вверх
 local function isRealCoin(obj)
 	if not obj or not obj.Parent then return false end
 	if not obj:IsA("BasePart") and not obj:IsA("MeshPart") then return false end
 	local n = obj.Name
 	if n ~= "Coin_Server" and n ~= "CoinVisual" and n ~= "MainCoin" and n ~= "Coin" then return false end
 	if character and obj:IsDescendantOf(character) then return false end
+	
+	-- Если монетка уже собрана — она летит вверх или исчезает
+	local vel = obj.AssemblyLinearVelocity or obj.Velocity
+	if vel and vel.Y > 8 then return false end -- летит вверх = собрана
+	
+	if obj.Transparency > 0.5 then return false end -- исчезает
+	
 	return true
 end
 
---// ИЩЕМ ТОЛЬКО БЛИЖАЙШИЕ МОНЕТЫ (в радиусе NEAR_RADIUS)
 local function findCoins()
 	local coins = {}
 	if not humanoidRootPart then return coins end
@@ -202,7 +208,6 @@ local function tpTo(pos)
 	humanoidRootPart.CFrame = CFrame.new(pos)
 end
 
---// ТВИН С ОРИГИНАЛЬНОЙ СКОРОСТЬЮ (dist / 17) — НЕ КИКАЕТ
 local currentTween = nil
 local function tweenTo(pos)
 	if not humanoidRootPart then return end
@@ -216,7 +221,6 @@ local function tweenTo(pos)
 	local targetY = math.clamp(pos.Y, currentPos.Y - CONFIG.MAX_Y_DIFF, currentPos.Y + CONFIG.MAX_Y_DIFF)
 	local safePos = Vector3.new(pos.X, targetY, pos.Z)
 	
-	-- Оригинальная скорость: dist / 17, макс 3 сек
 	local duration = math.min(dist / 17, 3)
 	
 	if currentTween then currentTween:Cancel() end
@@ -226,7 +230,6 @@ local function tweenTo(pos)
 	currentTween:Play()
 	currentTween.Completed:Wait()
 	
-	-- Если после твина всё ещё не достаточно близко — дотелепортируем
 	if getDistance(humanoidRootPart.Position, pos) > 2 then
 		tpTo(pos)
 	end
@@ -251,11 +254,13 @@ local function applySpeed()
 	if humanoid then humanoid.WalkSpeed = CONFIG.SPEED; humanoid.JumpPower = CONFIG.JUMP end
 end
 
---// СБОР — СНАЧАЛА ДОЛЕТАЕМ, ПОТОМ СОБИРАЕМ
 local function collectCoin(coin)
 	if not coin or not coin.Parent then return end
 	if not humanoidRootPart then return end
 	if not isAliveCheck(player) then return end
+	
+	-- Доп. проверка перед полётом: вдруг монетку уже собрали
+	if not isRealCoin(coin) then return end
 	
 	local coinPos = coin.Position
 	local dist = getDistance(humanoidRootPart.Position, coinPos)
@@ -264,10 +269,11 @@ local function collectCoin(coin)
 	
 	if CONFIG.ESP_ENABLED then addESP(coin, "💰") end
 	
-	-- Долетаем до монетки (оригинальная скорость, не кикает)
 	tweenTo(coinPos)
 	
-	-- Собираем всеми способами
+	-- После прилёта ещё раз проверим
+	if not coin.Parent or not isRealCoin(coin) then return end
+	
 	pcall(function()
 		firetouchinterest(humanoidRootPart, coin, 0)
 		firetouchinterest(humanoidRootPart, coin, 1)
@@ -392,4 +398,4 @@ player.CharacterRemoving:Connect(function()
 	if isRunning then statusLabel.Text = "💀"; statusLabel.TextColor3 = Color3.fromRGB(255, 100, 0) end
 end)
 
-print("MM2 AutoFarm v2.9 Fast Safe загружен. Радиус поиска: " .. CONFIG.NEAR_RADIUS)
+print("MM2 AutoFarm v2.9 Fast Safe загружен. Не гонится за собранными монетками.")
