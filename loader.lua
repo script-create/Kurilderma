@@ -1,7 +1,6 @@
-local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302, u971, u972, u973, u974, u975, u976, u977, u978, u979, u980, u981, u982, u983, u984, u985, u986, u987, u988, u989, u990, u991, u992, u993, u994, u995, u996, u997
+local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302, u912, u913, u914, u915, u916, u917, u918, u919, u920, u921, u922, u923, u924, u925, u926, u927, u928, u929
 
 do
-    local u998, u999, u1000, u1001, u1002
     local u9, u10, u99, u105, u110, u116, u157
     local Players = game:GetService('Players')
     local Workspace, RunService, LocalPlayer, u129, u130, u131, u162, u163, u164, u165, u166, u167, u168, u169, t25, v220, uDim2, t26
@@ -3769,201 +3768,233 @@ do
         end)
     end
 
-    -- Visuals tab: ready for the user's Visuals code.
+    local Lighting = game:GetService('Lighting')
+    -- Visuals tab: functions ported from the Visual section of the source.
+    local Lighting = game:GetService('Lighting')
     local VisualsTab = v300:Tab({
         Title = 'Visuals',
         Icon = 'eye',
     })
 
-    VisualsTab:Paragraph({
-        Title = 'CrystalHub Visuals',
-        Content = 'Visual functions will be added here.',
-    })
+    -- China Hat
+    local ChinaHatEnabled = false
+    local ChinaHatColor = Color3.fromRGB(255, 255, 255)
+    local ChinaLightColor = Color3.fromRGB(255, 255, 255)
+    local ChinaLightBrightness = 0
+    local ChinaLightRange = 12
+    local ChinaScale = Vector3.new(1.7, 1.1, 1.7)
 
-    -- VISUALS FROM THE SUPPLIED SOURCE
-    -- The source used a different UI library; the routines themselves are kept here,
-    -- with CrystalHub/WindUI controls around them.
-    local VisualsPlayers = game:GetService('Players')
-    local VisualsRunService = game:GetService('RunService')
-    local VisualsLighting = game:GetService('Lighting')
-    local VisualsLocalPlayer = VisualsPlayers.LocalPlayer
-    local VisualsCamera = Workspace.CurrentCamera
-
-    local ChinaHatSettings={enabled=false,hatColor=Color3.fromRGB(255,255,255),lightColor=Color3.fromRGB(255,255,255),lightBrightness=0,lightRange=12,scale=Vector3.new(1.7,1.1,1.7)}
-    u971=function(Character)
-        local Head=Character and Character:FindFirstChild('Head'); if not Head then return end
-        local old=Character:FindFirstChild('ChinaHat'); if old then old:Destroy() end
-        local Cone=Instance.new('Part'); Cone.Name='ChinaHat'; Cone.Size=Vector3.new(1,1,1); Cone.Material=Enum.Material.Neon; Cone.Transparency=.2; Cone.Anchored=false; Cone.CanCollide=false; Cone.CanTouch=false; Cone.CanQuery=false; Cone.Color=ChinaHatSettings.hatColor
-        local Mesh=Instance.new('SpecialMesh'); Mesh.MeshType=Enum.MeshType.FileMesh; Mesh.MeshId='rbxassetid://1033714'; Mesh.Scale=ChinaHatSettings.scale; Mesh.Parent=Cone
-        local Weld=Instance.new('Weld'); Weld.Part0=Head; Weld.Part1=Cone; Weld.C0=CFrame.new(0,.9,0); Weld.Parent=Cone
-        local Light=Instance.new('PointLight'); Light.Color=ChinaHatSettings.lightColor; Light.Brightness=ChinaHatSettings.lightBrightness; Light.Range=ChinaHatSettings.lightRange; Light.Shadows=true; Light.Parent=Cone; Cone.Parent=Character
+    u912 = function(Character)
+        if not Character then return end
+        local Head = Character:FindFirstChild('Head')
+        if not Head then return end
+        local old = Character:FindFirstChild('ChinaHat')
+        if old then old:Destroy() end
+        local Cone = Instance.new('Part')
+        Cone.Name = 'ChinaHat'
+        Cone.Size = Vector3.new(1, 1, 1)
+        Cone.Material = Enum.Material.Neon
+        Cone.Transparency = 0.2
+        Cone.Anchored = false
+        Cone.CanCollide = false
+        Cone.Color = ChinaHatColor
+        local Mesh = Instance.new('SpecialMesh')
+        Mesh.MeshType = Enum.MeshType.FileMesh
+        Mesh.MeshId = 'rbxassetid://1033714'
+        Mesh.Scale = ChinaScale
+        Mesh.Parent = Cone
+        local Weld = Instance.new('Weld')
+        Weld.Part0 = Head
+        Weld.Part1 = Cone
+        Weld.C0 = CFrame.new(0, 0.9, 0)
+        Weld.Parent = Cone
+        local Light = Instance.new('PointLight')
+        Light.Color = ChinaLightColor
+        Light.Brightness = ChinaLightBrightness
+        Light.Range = ChinaLightRange
+        Light.Shadows = true
+        Light.Parent = Cone
+        Cone.Parent = Character
     end
-    u972=function(Character) if ChinaHatSettings.enabled then u971(Character) end end
-    VisualsLocalPlayer.CharacterAdded:Connect(u972)
-    VisualsTab:Paragraph({Title='China Hat',Content='China Hat with source settings.'})
-    VisualsTab:Toggle({Title='China Hat',Default=false,Callback=function(v) ChinaHatSettings.enabled=v; if v and VisualsLocalPlayer.Character then u971(VisualsLocalPlayer.Character) elseif not v and VisualsLocalPlayer.Character then local h=VisualsLocalPlayer.Character:FindFirstChild('ChinaHat'); if h then h:Destroy() end end end})
-    VisualsTab:ColorPicker({Title='Hat Color',Default=ChinaHatSettings.hatColor,Callback=function(v) ChinaHatSettings.hatColor=v; if ChinaHatSettings.enabled and VisualsLocalPlayer.Character then u971(VisualsLocalPlayer.Character) end end})
-    VisualsTab:ColorPicker({Title='Light Color',Default=ChinaHatSettings.lightColor,Callback=function(v) ChinaHatSettings.lightColor=v; if ChinaHatSettings.enabled and VisualsLocalPlayer.Character then u971(VisualsLocalPlayer.Character) end end})
-    VisualsTab:Slider({Title='Light Brightness',Min=0,Max=10,Default=0,Step=.1,Callback=function(v) ChinaHatSettings.lightBrightness=v; if ChinaHatSettings.enabled and VisualsLocalPlayer.Character then u971(VisualsLocalPlayer.Character) end end})
-    VisualsTab:Slider({Title='Light Range',Min=0,Max=50,Default=12,Step=1,Callback=function(v) ChinaHatSettings.lightRange=v; if ChinaHatSettings.enabled and VisualsLocalPlayer.Character then u971(VisualsLocalPlayer.Character) end end})
 
-    local AuraColors={Safe=Color3.fromRGB(255,255,255)}; local ToggledAuras={}
-    u973=function(character)
-        local torso=character and (character:FindFirstChild('UpperTorso') or character:FindFirstChild('Torso')); if not torso then return end
+    u913 = function(Character)
+        if ChinaHatEnabled then u912(Character) end
+    end
+
+    Players.LocalPlayer.CharacterAdded:Connect(u913)
+
+    local ChinaHatGroup = VisualsTab
+    ChinaHatGroup:Toggle({Title = 'China Hat ESP', Default = false, Callback = function(v)
+        ChinaHatEnabled = v
+        local c = Players.LocalPlayer.Character
+        if v and c then u912(c) elseif c then local h=c:FindFirstChild('ChinaHat'); if h then h:Destroy() end end
+    end})
+    ChinaHatGroup:ColorPicker({Title = 'Hat Color', Default = ChinaHatColor, Callback = function(v)
+        ChinaHatColor=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end
+    end})
+    ChinaHatGroup:ColorPicker({Title = 'Light Color', Default = ChinaLightColor, Callback = function(v)
+        ChinaLightColor=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end
+    end})
+    ChinaHatGroup:Button({Title = 'Light Brightness / Range', Callback = function()
+        v25('Brightness (0-10)',0,10,ChinaLightBrightness,1,function(v) ChinaLightBrightness=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaLightBrightness=0 end)
+        v25('Range (0-50)',0,50,ChinaLightRange,1,function(v) ChinaLightRange=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaLightRange=12 end)
+    end})
+    ChinaHatGroup:Button({Title = 'Hat Scale', Callback = function()
+        v25('Scale X (0.5-3)',0.5,3,ChinaScale.X,0.1,function(v) ChinaScale=Vector3.new(v,ChinaScale.Y,ChinaScale.Z); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(1.7,ChinaScale.Y,ChinaScale.Z) end)
+        v25('Scale Y (0.5-3)',0.5,3,ChinaScale.Y,0.1,function(v) ChinaScale=Vector3.new(ChinaScale.X,v,ChinaScale.Z); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(ChinaScale.X,1.1,ChinaScale.Z) end)
+        v25('Scale Z (0.5-3)',0.5,3,ChinaScale.Z,0.1,function(v) ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,v); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,1.7) end)
+    end})
+
+    -- Safe Aura
+    local AuraEnabled = false
+    local AuraColor = Color3.fromRGB(0, 255, 120)
+    u914 = function(character)
+        local torso = character and (character:FindFirstChild('UpperTorso') or character:FindFirstChild('Torso'))
+        if not torso then return end
         local old=torso:FindFirstChild('AuraSafe'); if old then old:Destroy() end
-        local container=Instance.new('Folder'); container.Name='AuraSafe'; container.Parent=torso
-        local light=Instance.new('PointLight'); light.Range=5; light.Brightness=3; light.Color=AuraColors.Safe; light.Parent=container
-        local glowAttach=Instance.new('Attachment'); glowAttach.Name='Glow'; glowAttach.Parent=container
-        local glow=Instance.new('ParticleEmitter'); glow.Brightness=1; glow.Color=ColorSequence.new(AuraColors.Safe); glow.Lifetime=NumberRange.new(1); glow.LightEmission=1; glow.LockedToPart=true; glow.Orientation=Enum.ParticleOrientation.FacingCamera; glow.Rate=4; glow.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,4.25),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,3.375)}); glow.Speed=NumberRange.new(.001); glow.Texture='rbxassetid://1075864321'; glow.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)}); glow.Parent=glowAttach
-        local top=Instance.new('Attachment'); top.Position=Vector3.new(0,2.125,0); top.Parent=container
-        local bottom=Instance.new('Attachment'); bottom.Position=Vector3.new(0,-3,0); bottom.Parent=container
-        for _,tex in ipairs({'rbxassetid://7673945506','rbxassetid://6045867277','rbxassetid://8285797183'}) do local beam=Instance.new('Beam'); beam.Attachment0=bottom; beam.Attachment1=top; beam.Color=ColorSequence.new(AuraColors.Safe); beam.Enabled=true; beam.FaceCamera=true; beam.LightEmission=1; beam.Segments=10; beam.Texture=tex; beam.TextureLength=.3; beam.TextureMode=Enum.TextureMode.Stretch; beam.TextureSpeed=2; beam.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)}); beam.Width0=6; beam.Width1=6; beam.Parent=container end
+        local f=Instance.new('Folder'); f.Name='AuraSafe'; f.Parent=torso
+        local light=Instance.new('PointLight'); light.Range=5; light.Brightness=3; light.Color=AuraColor; light.Parent=f
+        local a=Instance.new('Attachment'); a.Parent=f
+        local pe=Instance.new('ParticleEmitter'); pe.Color=ColorSequence.new(AuraColor); pe.Rate=4; pe.Lifetime=NumberRange.new(1); pe.LightEmission=1; pe.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,4.25),NumberSequenceKeypoint.new(0.5,0),NumberSequenceKeypoint.new(1,3.375)}); pe.Speed=NumberRange.new(0.001); pe.Texture='rbxassetid://1075864321'; pe.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0),NumberSequenceKeypoint.new(1,1)}); pe.Parent=a
     end
-    u974=function(character,auraName) if auraName=='Safe' and character then u973(character) end end
-    VisualsLocalPlayer.CharacterAdded:Connect(function(c) task.wait(.5); for name,on in pairs(ToggledAuras) do if on then u974(c,name) end end end)
-    VisualsTab:Toggle({Title='Safe Aura',Default=false,Callback=function(v) ToggledAuras.Safe=v; if v then u974(VisualsLocalPlayer.Character,'Safe') else local t=VisualsLocalPlayer.Character and (VisualsLocalPlayer.Character:FindFirstChild('UpperTorso') or VisualsLocalPlayer.Character:FindFirstChild('Torso')); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end end end})
-    VisualsTab:ColorPicker({Title='Safe Aura Color',Default=AuraColors.Safe,Callback=function(v) AuraColors.Safe=v; if ToggledAuras.Safe then u974(VisualsLocalPlayer.Character,'Safe') end end})
+    u915 = function(character, auraName)
+        if auraName == 'Safe' and AuraEnabled then u914(character) end
+    end
+    Players.LocalPlayer.CharacterAdded:Connect(function(c) task.wait(0.5); u915(c,'Safe') end)
+    VisualsTab:Paragraph({Title='AuraGroup', Content=''})
+    local AuraGroup=VisualsTab
+    AuraGroup:Toggle({Title='Safe',Default=false,Callback=function(v) AuraEnabled=v; local c=Players.LocalPlayer.Character; if v and c then u914(c) elseif c then local t=c:FindFirstChild('UpperTorso') or c:FindFirstChild('Torso'); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end end end})
+    AuraGroup:ColorPicker({Title='Aura Color',Default=AuraColor,Callback=function(v) AuraColor=v; if AuraEnabled and Players.LocalPlayer.Character then u914(Players.LocalPlayer.Character) end end})
 
-    local ChamsSettings={Character={Enabled=false,Color=Color3.new(1,1,1),Material=Enum.Material.ForceField},Weapon={Enabled=false,Color=Color3.new(1,1,1),Material=Enum.Material.Neon}}
-    u975=function(character)
+    -- Self: character / weapon chams and trail
+    local CharChams=false; local WeaponChams=false; local CharColor=Color3.new(1,1,1); local WeaponColor=Color3.new(1,1,1); local CharMaterial=Enum.Material.ForceField; local WeaponMaterial=Enum.Material.Neon; local TrailEnabled=false; local TrailColor=Color3.new(1,1,1)
+    u916 = function(character)
         if not character then return end
-        if ChamsSettings.Character.Enabled then for _,obj in ipairs(character:GetDescendants()) do if obj:IsA('BasePart') and not (character:FindFirstChildOfClass('Tool') and obj:IsDescendantOf(character:FindFirstChildOfClass('Tool'))) then obj.Material=ChamsSettings.Character.Material; obj.Color=ChamsSettings.Character.Color end end end
-        if ChamsSettings.Weapon.Enabled then local gun=character:FindFirstChildOfClass('Tool'); if gun then for _,obj in ipairs(gun:GetDescendants()) do if obj:IsA('BasePart') then obj.Material=ChamsSettings.Weapon.Material; obj.Color=ChamsSettings.Weapon.Color; if obj:IsA('MeshPart') then obj.TextureID='' end end end end end
-    end
-    u976=function(character) if not character then return end; task.defer(u975,character); character.ChildAdded:Connect(function(child) if child:IsA('Tool') then task.defer(u975,character) end end) end
-    VisualsLocalPlayer.CharacterAdded:Connect(u976)
-    VisualsTab:Toggle({Title='Character Chams',Default=false,Callback=function(v) ChamsSettings.Character.Enabled=v; u975(VisualsLocalPlayer.Character) end})
-    VisualsTab:ColorPicker({Title='Character Chams Color',Default=ChamsSettings.Character.Color,Callback=function(v) ChamsSettings.Character.Color=v; u975(VisualsLocalPlayer.Character) end})
-    VisualsTab:Dropdown({Title='Character Material',Values={'ForceField','Neon'},Default='ForceField',Callback=function(v) ChamsSettings.Character.Material=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u975(VisualsLocalPlayer.Character) end})
-    VisualsTab:Toggle({Title='Weapon Chams',Default=false,Callback=function(v) ChamsSettings.Weapon.Enabled=v; u975(VisualsLocalPlayer.Character) end})
-    VisualsTab:ColorPicker({Title='Weapon Chams Color',Default=ChamsSettings.Weapon.Color,Callback=function(v) ChamsSettings.Weapon.Color=v; u975(VisualsLocalPlayer.Character) end})
-    VisualsTab:Dropdown({Title='Weapon Material',Values={'Neon','ForceField'},Default='Neon',Callback=function(v) ChamsSettings.Weapon.Material=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u975(VisualsLocalPlayer.Character) end})
-
-    local TrailSettings={Color=Color3.new(1,1,1),Lifetime=1.6,Enabled=false}
-    u977=function(on)
-        local c=VisualsLocalPlayer.Character; if not c then return end
-        for _,obj in ipairs(c:GetDescendants()) do if obj:IsA('Trail') and obj.Name=='BlaBla' then obj:Destroy() end end
-        if not on then return end
-        local root=c:FindFirstChild('HumanoidRootPart'); if not root then return end
-        for _,part in ipairs(c:GetChildren()) do if part:IsA('BasePart') then local tr=Instance.new('Trail'); tr.Name='BlaBla'; tr.Texture='rbxassetid://1390780157'; tr.Color=ColorSequence.new(TrailSettings.Color); tr.Lifetime=TrailSettings.Lifetime; local a0=Instance.new('Attachment'); a0.Name='Pointer1'; a0.Parent=part; local a1=Instance.new('Attachment'); a1.Name='Pointer2'; a1.Parent=root; tr.Attachment0=a0; tr.Attachment1=a1; tr.Parent=part end end
-    end
-    VisualsTab:Toggle({Title='Trail',Default=false,Callback=function(v) TrailSettings.Enabled=v; u977(v) end})
-    VisualsTab:ColorPicker({Title='Trail Color',Default=TrailSettings.Color,Callback=function(v) TrailSettings.Color=v; if TrailSettings.Enabled then u977(false); u977(true) end end})
-    VisualsTab:Slider({Title='Trail Lifetime',Min=.1,Max=5,Default=1.6,Step=.1,Callback=function(v) TrailSettings.Lifetime=v; if TrailSettings.Enabled then u977(false); u977(true) end end})
-
-    local BulletSettings={Enabled=false,Color=Color3.new(1,1,1),Size=.4,Transparency=0,TimeAlive=3,TextureID='rbxassetid://12781852245'}
-    u978=function(startPos,endPos)
-        if not BulletSettings.Enabled then return end
-        local a=Instance.new('Part'); a.Anchored=true; a.CanCollide=false; a.CanTouch=false; a.CanQuery=false; a.Transparency=1; a.Size=Vector3.new(.2,.2,.2); a.Position=startPos; a.Parent=workspace
-        local b=Instance.new('Part'); b.Anchored=true; b.CanCollide=false; b.CanTouch=false; b.CanQuery=false; b.Transparency=1; b.Size=Vector3.new(.2,.2,.2); b.Position=endPos; b.Parent=workspace
-        local beam=Instance.new('Beam'); local aa=Instance.new('Attachment',a); local ab=Instance.new('Attachment',b); beam.Attachment0=aa; beam.Attachment1=ab; beam.Color=ColorSequence.new(BulletSettings.Color); beam.Width0=BulletSettings.Size; beam.Width1=BulletSettings.Size; beam.Transparency=NumberSequence.new(BulletSettings.Transparency); beam.Texture=BulletSettings.TextureID; beam.TextureLength=2; beam.FaceCamera=true; beam.Parent=a
-        task.delay(BulletSettings.TimeAlive,function() if a then a:Destroy() end; if b then b:Destroy() end end)
-    end
-    VisualsTab:Toggle({Title='Bullet Tracer',Default=false,Callback=function(v) BulletSettings.Enabled=v end})
-    VisualsTab:Dropdown({Title='Tracer Texture',Values={'Beam','Lightning','Heartrate','Chain','Glitch','Swirl'},Default='Beam',Callback=function(v) local ids={Beam='rbxassetid://12781852245',Lightning='rbxassetid://446111271',Heartrate='rbxassetid://5830549480',Chain='rbxassetid://9632168658',Glitch='rbxassetid://8089467613',Swirl='rbxassetid://5638168605'}; BulletSettings.TextureID=ids[v] or BulletSettings.TextureID end})
-    VisualsTab:ColorPicker({Title='Bullet Tracer Color',Default=BulletSettings.Color,Callback=function(v) BulletSettings.Color=v end})
-    VisualsTab:Slider({Title='Tracer Size',Min=.05,Max=3,Default=.4,Step=.05,Callback=function(v) BulletSettings.Size=v end})
-    VisualsTab:Slider({Title='Tracer Transparency',Min=0,Max=1,Default=0,Step=.05,Callback=function(v) BulletSettings.Transparency=v end})
-    VisualsTab:Slider({Title='Tracer Time Alive',Min=.1,Max=10,Default=3,Step=.1,Callback=function(v) BulletSettings.TimeAlive=v end})
-    if getnamecallmethod and MainEvent then
-        pcall(function()
-            local mt=getrawmetatable(MainEvent); local old=mt.__namecall; setreadonly(mt,false)
-            mt.__namecall=function(self,...)
-                local args={...}
-                if self==MainEvent and getnamecallmethod()=='FireServer' and args[1]=='ShootGun' and BulletSettings.Enabled and typeof(args[3])=='Vector3' and typeof(args[4])=='Vector3' then u978(args[3],args[4]) end
-                return old(self,unpack(args))
+        if CharChams then
+            for _,obj in ipairs(character:GetDescendants()) do
+                if obj:IsA('BasePart') and not (obj.Parent and obj.Parent:IsA('Tool')) then obj.Material=CharMaterial; obj.Color=CharColor end
             end
-            setreadonly(mt,true)
-        end)
+        end
+        if WeaponChams then
+            local tool=character:FindFirstChildOfClass('Tool')
+            if tool then for _,obj in ipairs(tool:GetDescendants()) do if obj:IsA('BasePart') then obj.Material=WeaponMaterial; obj.Color=WeaponColor end end end
+        end
     end
-
-
-    local defaultTextHP=' Health '; local defaultTextArmor='                   Armor'; local defaultTextEnergy='Dark Energy              '
-    local defaultColorHP=Color3.new(.941176,.031373,.819608); local defaultColorArmor=Color3.new(.376471,.031373,.933333); local defaultColorEnergy=Color3.new(.768627,.039216,.952941)
-    local textHP,textArmor,textEnergy=defaultTextHP,defaultTextArmor,defaultTextEnergy; local colorHP,colorArmor,colorEnergy=defaultColorHP,defaultColorArmor,defaultColorEnergy; local toggleHP,toggleArmor,toggleEnergy=false,false,false
-    u979=function()
-        local pg=VisualsLocalPlayer:FindFirstChildOfClass('PlayerGui'); local main=pg and pg:FindFirstChild('MainScreenGui'); local bar=main and main:FindFirstChild('Bar'); if not bar then return end
-        if toggleHP and bar:FindFirstChild('HP') then local x=bar.HP; if x:FindFirstChild('TextLabel') then x.TextLabel.Text=textHP end; if x:FindFirstChild('bar') then x.bar.BackgroundColor3=colorHP end end
-        if toggleArmor and bar:FindFirstChild('Armor') then local x=bar.Armor; if x:FindFirstChild('TextLabel') then x.TextLabel.Text=textArmor end; if x:FindFirstChild('bar') then x.bar.BackgroundColor3=colorArmor end end
-        if toggleEnergy and bar:FindFirstChild('Energy') then local x=bar.Energy; if x:FindFirstChild('TextLabel') then x.TextLabel.Text=textEnergy end; if x:FindFirstChild('bar') then x.bar.BackgroundColor3=colorEnergy end end
+    u917 = function(character) task.wait(0.5); u916(character); character.ChildAdded:Connect(function(c) if c:IsA('Tool') then task.wait(); u916(character) end end) end
+    u918 = function(enabled)
+        local c=Players.LocalPlayer.Character; if not c then return end
+        local hrp=c:FindFirstChild('HumanoidRootPart'); if not hrp then return end
+        local old=hrp:FindFirstChild('CrystalHubTrail'); if old then old:Destroy() end
+        if not enabled then return end
+        local a0=Instance.new('Attachment'); a0.Name='TrailA'; a0.Position=Vector3.new(0,1,0); a0.Parent=hrp
+        local a1=Instance.new('Attachment'); a1.Name='TrailB'; a1.Position=Vector3.new(0,-1,0); a1.Parent=hrp
+        local tr=Instance.new('Trail'); tr.Name='CrystalHubTrail'; tr.Attachment0=a0; tr.Attachment1=a1; tr.Color=ColorSequence.new(TrailColor); tr.Lifetime=1.6; tr.Parent=hrp
     end
-    VisualsTab:Toggle({Title='Customize Health',Default=false,Callback=function(v) toggleHP=v; u979() end}); VisualsTab:ColorPicker({Title='Health Color',Default=defaultColorHP,Callback=function(v) colorHP=v; if toggleHP then u979() end end}); VisualsTab:Paragraph({Title='Health Text',Content='Source text customization is retained in the visual function.'})
-    VisualsTab:Toggle({Title='Customize Armor',Default=false,Callback=function(v) toggleArmor=v; u979() end}); VisualsTab:ColorPicker({Title='Armor Color',Default=defaultColorArmor,Callback=function(v) colorArmor=v; if toggleArmor then u979() end end}); VisualsTab:Paragraph({Title='Armor Text',Content='Source text customization is retained in the visual function.'})
-    VisualsTab:Toggle({Title='Customize Energy',Default=false,Callback=function(v) toggleEnergy=v; u979() end}); VisualsTab:ColorPicker({Title='Energy Color',Default=defaultColorEnergy,Callback=function(v) colorEnergy=v; if toggleEnergy then u979() end end}); VisualsTab:Paragraph({Title='Energy Text',Content='Source text customization is retained in the visual function.'})
-    VisualsLocalPlayer.CharacterAdded:Connect(function() if toggleHP or toggleArmor or toggleEnergy then task.wait(.5); u979() end end)
+    Players.LocalPlayer.CharacterAdded:Connect(u917)
+    if Players.LocalPlayer.Character then task.spawn(u917,Players.LocalPlayer.Character) end
+    VisualsTab:Paragraph({Title='Self', Content=''})
+    local SelfGroup=VisualsTab
+    SelfGroup:Toggle({Title='Character Chams',Default=false,Callback=function(v) CharChams=v; u916(Players.LocalPlayer.Character) end})
+    SelfGroup:ColorPicker({Title='Character Color',Default=CharColor,Callback=function(v) CharColor=v; u916(Players.LocalPlayer.Character) end})
+    SelfGroup:Dropdown({Title='Character Material',Options={'ForceField','Neon'},Default='ForceField',Callback=function(v) CharMaterial=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u916(Players.LocalPlayer.Character) end})
+    SelfGroup:Toggle({Title='Weapon Chams',Default=false,Callback=function(v) WeaponChams=v; u916(Players.LocalPlayer.Character) end})
+    SelfGroup:ColorPicker({Title='Weapon Color',Default=WeaponColor,Callback=function(v) WeaponColor=v; u916(Players.LocalPlayer.Character) end})
+    SelfGroup:Dropdown({Title='Weapon Material',Options={'Neon','ForceField'},Default='Neon',Callback=function(v) WeaponMaterial=(v=='ForceField' and Enum.Material.ForceField or Enum.Material.Neon); u916(Players.LocalPlayer.Character) end})
+    SelfGroup:Toggle({Title='Character Trail',Default=false,Callback=function(v) TrailEnabled=v; u918(v) end})
+    SelfGroup:ColorPicker({Title='Trail Color',Default=TrailColor,Callback=function(v) TrailColor=v; u918(TrailEnabled) end})
 
-    local Crosshair={Enabled=false,Text=true,Rainbow=false,Color=Color3.new(1,1,1),Spin=.8}; local crossGui,aimContainer,topLine,bottomLine,leftLine,rightLine,textLabel; local crossTime,crossProgress,crossRotation=0,0,5
-    u980=function(parent,size,pos,color) local f=Instance.new('Frame'); f.Size=size; f.Position=pos; f.BackgroundColor3=color; f.BorderSizePixel=0; f.Parent=parent; local st=Instance.new('UIStroke'); st.Color=Color3.new(0,0,0); st.Thickness=1; st.Parent=f; return f end
-    u981=function(parent,text,pos,color,font,scaled) local l=Instance.new('TextLabel'); l.Text=text; l.Position=pos; l.TextColor3=color; l.Font=font; l.TextScaled=scaled; l.BackgroundTransparency=1; l.Size=UDim2.fromOffset(150,23); l.Parent=parent; local st=Instance.new('UIStroke'); st.Color=Color3.new(0,0,0); st.Thickness=1; st.Parent=l; return l end
-    u982=function() if crossGui then crossGui:Destroy() end; crossGui=nil; aimContainer=nil; topLine=nil; bottomLine=nil; leftLine=nil; rightLine=nil; textLabel=nil end
-    u983=function() u982(); crossGui=Instance.new('ScreenGui'); crossGui.Name='AimSightGUI'; crossGui.ResetOnSpawn=false; crossGui.Parent=VisualsLocalPlayer:WaitForChild('PlayerGui'); aimContainer=Instance.new('Frame'); aimContainer.BackgroundTransparency=1; aimContainer.Size=UDim2.fromOffset(25,25); aimContainer.AnchorPoint=Vector2.new(.5,.5); aimContainer.Parent=crossGui; topLine=u980(aimContainer,UDim2.fromOffset(3,25),UDim2.new(.5,-1.5,0,0),Crosshair.Color); bottomLine=u980(aimContainer,UDim2.fromOffset(3,25),UDim2.new(.5,-1.5,1,-25),Crosshair.Color); leftLine=u980(aimContainer,UDim2.fromOffset(25,3),UDim2.new(0,0,.5,-1.5),Crosshair.Color); rightLine=u980(aimContainer,UDim2.fromOffset(25,3),UDim2.new(1,-25,.5,-1.5),Crosshair.Color); textLabel=u981(crossGui,'Matcha.cc',UDim2.fromOffset(0,0),Crosshair.Color,Enum.Font.Arcade,true); textLabel.Visible=Crosshair.Text end
-    u984=function()
-        if not(topLine and bottomLine and leftLine and rightLine and textLabel) then return end
-        CrosshairState.time=crossTime; CrosshairState.rotationProgress=crossProgress; CrosshairState.currentRotationSpeed=crosshairRotation
-        CrosshairState.topSize=topLine.Size; CrosshairState.bottomSize=bottomLine.Size; CrosshairState.leftSize=leftLine.Size; CrosshairState.rightSize=rightLine.Size
-        CrosshairState.topPos=topLine.Position; CrosshairState.bottomPos=bottomLine.Position; CrosshairState.leftPos=leftLine.Position; CrosshairState.rightPos=rightLine.Position
-        CrosshairState.textValue=textLabel.Text; CrosshairState.textColor=textLabel.TextColor3
+    -- Bullet tracer: visual function and a safe ShootGun hook.
+    local BulletTracerEnabled=false; local BulletTracerColor=Color3.fromRGB(255,255,255); local BulletTracerSize=0.4; local BulletTracerTransparency=0; local BulletTracerLife=2; local BulletTracerTexture='rbxassetid://12781852245'
+    u919 = function(startPos,endPos)
+        if not BulletTracerEnabled or typeof(startPos)~='Vector3' or typeof(endPos)~='Vector3' then return end
+        local p0=Instance.new('Part'); p0.Anchored=true; p0.CanCollide=false; p0.Transparency=1; p0.Size=Vector3.new(.1,.1,.1); p0.CFrame=CFrame.new(startPos); p0.Parent=workspace
+        local p1=p0:Clone(); p1.CFrame=CFrame.new(endPos); p1.Parent=workspace
+        local a0=Instance.new('Attachment',p0); local a1=Instance.new('Attachment',p1)
+        local beam=Instance.new('Beam'); beam.Attachment0=a0; beam.Attachment1=a1; beam.Texture=BulletTracerTexture; beam.Color=ColorSequence.new(BulletTracerColor); beam.Width0=BulletTracerSize; beam.Width1=BulletTracerSize; beam.Transparency=NumberSequence.new(BulletTracerTransparency); beam.FaceCamera=true; beam.Parent=p0
+        task.delay(BulletTracerLife,function() if p0 then p0:Destroy() end; if p1 then p1:Destroy() end end)
     end
-    u985=function()
-        if not(topLine and bottomLine and leftLine and rightLine and textLabel) then return end
-        crossTime=CrosshairState.time or 0; crossProgress=CrosshairState.rotationProgress or 0; crosshairRotation=CrosshairState.currentRotationSpeed or 5
-        if CrosshairState.topSize then topLine.Size=CrosshairState.topSize end; if CrosshairState.bottomSize then bottomLine.Size=CrosshairState.bottomSize end
-        if CrosshairState.leftSize then leftLine.Size=CrosshairState.leftSize end; if CrosshairState.rightSize then rightLine.Size=CrosshairState.rightSize end
-        if CrosshairState.topPos then topLine.Position=CrosshairState.topPos end; if CrosshairState.bottomPos then bottomLine.Position=CrosshairState.bottomPos end
-        if CrosshairState.leftPos then leftLine.Position=CrosshairState.leftPos end; if CrosshairState.rightPos then rightLine.Position=CrosshairState.rightPos end
-        if CrosshairState.textValue then textLabel.Text=CrosshairState.textValue end; if CrosshairState.textColor then textLabel.TextColor3=CrosshairState.textColor end
+    VisualsTab:Paragraph({Title='BulletTracer', Content=''})
+    local BulletGroup=VisualsTab
+    BulletGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) BulletTracerEnabled=v end})
+    BulletGroup:ColorPicker({Title='Color',Default=BulletTracerColor,Callback=function(v) BulletTracerColor=v end})
+    BulletGroup:Dropdown({Title='Texture',Options={'Beam','Lightning','Heartrate','Chain','Glitch','Swirl'},Default='Beam',Callback=function(v) local ids={Beam='12781852245',Lightning='11481682774',Heartrate='1230763696',Chain='1033714',Glitch='1154459643',Swirl='1049817702'}; BulletTracerTexture='rbxassetid://'..(ids[v] or ids.Beam) end})
+    BulletGroup:Button({Title='Size / Transparency / Lifetime',Callback=function() v25('Size',0.1,3,BulletTracerSize,0.1,function(v) BulletTracerSize=v end,function() BulletTracerSize=0.4 end); v25('Transparency',0,1,BulletTracerTransparency,0.05,function(v) BulletTracerTransparency=v end,function() BulletTracerTransparency=0 end); v25('Lifetime',0.2,5,BulletTracerLife,0.1,function(v) BulletTracerLife=v end,function() BulletTracerLife=2 end) end})
+
+    -- HUD changer (same target GUI/function as the source, but guarded so missing UI does not break the tab).
+    local HudHP=false; local HudArmor=false; local HudEnergy=false; local HudHPColor=Color3.fromRGB(240,8,209); local HudArmorColor=Color3.fromRGB(96,8,238); local HudEnergyColor=Color3.fromRGB(196,10,243)
+    u920 = function()
+        local pg=Players.LocalPlayer:FindFirstChildOfClass('PlayerGui'); local main=pg and pg:FindFirstChild('MainScreenGui'); local bar=main and main:FindFirstChild('Bar'); if not bar then return end
+        local function apply(name,on,color) local g=bar:FindFirstChild(name); if on and g then local t=g:FindFirstChild('TextLabel'); local b=g:FindFirstChild('bar'); if t then t.Text=name end; if b and b:IsA('GuiObject') then b.BackgroundColor3=color end end end
+        apply('HP',HudHP,HudHPColor); apply('Armor',HudArmor,HudArmorColor); apply('Energy',HudEnergy,HudEnergyColor)
     end
-    u986=function(t) return Color3.new(math.sin(t*.6)*.5+.5,math.sin(t*.6+2)*.5+.5,math.sin(t*.6+4)*.5+.5) end
-    u987=function(progress) local slowdownStart=.6; local duration=.35; local minSpeed=.3; if progress>=slowdownStart then local p=(progress-slowdownStart)/duration; return Crosshair.Spin*math.max(1-p*p*(1-minSpeed),minSpeed) end return Crosshair.Spin end
-    u988=function(cur,target,smoothing) return cur+(target-cur)*smoothing end
-    u989=function(t,speed) local p=math.sin(t*speed)*.5+.5; return p*p end
-    u990=function(character) if Crosshair.Enabled then u983(); u985() end; local hum=character and character:FindFirstChildOfClass('Humanoid'); if hum then hum.Died:Connect(function() u984() end) end end
-    VisualsLocalPlayer.CharacterAdded:Connect(u990)
-    VisualsRunService.RenderStepped:Connect(function(dt) if not(Crosshair.Enabled and aimContainer and topLine and bottomLine and leftLine and rightLine and textLabel) then return end; crossTime+=dt; local m=VisualsLocalPlayer:GetMouse(); aimContainer.Position=UDim2.fromOffset(m.X,m.Y); textLabel.Position=UDim2.fromOffset(m.X-70,m.Y+50); crossProgress=(crossProgress+u987(crossProgress)*dt)%1; crossRotation=u988(crossRotation,crossProgress*360,1); aimContainer.Rotation=crossRotation; local pulse=u989(crossTime,2.5); local len=-10+(-30+10)*pulse; topLine.Size=UDim2.fromOffset(3,len); bottomLine.Size=UDim2.fromOffset(3,len); leftLine.Size=UDim2.fromOffset(len,3); rightLine.Size=UDim2.fromOffset(len,3); local col=Crosshair.Rainbow and u986(crossTime) or Crosshair.Color; topLine.BackgroundColor3=col; bottomLine.BackgroundColor3=col; leftLine.BackgroundColor3=col; rightLine.BackgroundColor3=col; textLabel.TextColor3=col end)
-    VisualsTab:Toggle({Title='Crosshair',Default=false,Callback=function(v) Crosshair.Enabled=v; if v then u983() else u982() end end})
-    VisualsTab:Toggle({Title='Crosshair Text',Default=true,Callback=function(v) Crosshair.Text=v; if textLabel then textLabel.Visible=v end end})
-    VisualsTab:Toggle({Title='Crosshair Rainbow',Default=false,Callback=function(v) Crosshair.Rainbow=v end})
-    VisualsTab:ColorPicker({Title='Crosshair Color',Default=Crosshair.Color,Callback=function(v) Crosshair.Color=v end})
-    VisualsTab:Slider({Title='Crosshair Spin Speed',Min=.1,Max=2,Default=.8,Step=.05,Callback=function(v) Crosshair.Spin=v end})
+    VisualsTab:Paragraph({Title='Hud Changer', Content=''})
+    local HudGroup=VisualsTab
+    HudGroup:Toggle({Title='Customize Health',Default=false,Callback=function(v) HudHP=v; u920() end}); HudGroup:ColorPicker({Title='Health Color',Default=HudHPColor,Callback=function(v) HudHPColor=v; u920() end})
+    HudGroup:Toggle({Title='Customize Armor',Default=false,Callback=function(v) HudArmor=v; u920() end}); HudGroup:ColorPicker({Title='Armor Color',Default=HudArmorColor,Callback=function(v) HudArmorColor=v; u920() end})
+    HudGroup:Toggle({Title='Customize Energy',Default=false,Callback=function(v) HudEnergy=v; u920() end}); HudGroup:ColorPicker({Title='Energy Color',Default=HudEnergyColor,Callback=function(v) HudEnergyColor=v; u920() end})
 
-    local RainSettings={Enabled=false,Color=Color3.new(1,1,1),Lifetime=5,Rate=1000,Speed=100}; local SnowSettings={Enabled=false,Color=Color3.new(1,1,1),Lifetime=100,Rate=100,Speed=10}; local rainPart,rainEmitter,rainConnection,snowPart,snowEmitter,snowConnection
-    u991=function() if rainPart then rainPart:Destroy() end; rainPart=Instance.new('Part'); rainPart.Size=Vector3.new(51.8,.001,52.084); rainPart.Anchored=true; rainPart.CanCollide=false; rainPart.Transparency=1; rainPart.Parent=workspace; rainEmitter=Instance.new('ParticleEmitter'); rainEmitter.Color=ColorSequence.new(RainSettings.Color); rainEmitter.LightEmission=1; rainEmitter.Orientation=Enum.ParticleOrientation.FacingCameraWorldUp; rainEmitter.Size=NumberSequence.new(.4); rainEmitter.Squash=NumberSequence.new(4); rainEmitter.Texture='rbxassetid://129110349'; rainEmitter.EmissionDirection=Enum.NormalId.Bottom; rainEmitter.Lifetime=NumberRange.new(RainSettings.Lifetime); rainEmitter.Rate=RainSettings.Rate; rainEmitter.Speed=NumberRange.new(RainSettings.Speed); rainEmitter.LockedToPart=true; rainEmitter.Parent=rainPart end
-    u992=function() if snowPart then snowPart:Destroy() end; snowPart=Instance.new('Part'); snowPart.Name='SnowEmitterPart'; snowPart.Size=Vector3.new(51.8,.001,52.084); snowPart.Anchored=true; snowPart.CanCollide=false; snowPart.Transparency=1; snowPart.Parent=workspace; snowEmitter=Instance.new('ParticleEmitter'); snowEmitter.Brightness=1; snowEmitter.Color=ColorSequence.new(SnowSettings.Color); snowEmitter.EmissionDirection=Enum.NormalId.Bottom; snowEmitter.Enabled=true; snowEmitter.Lifetime=NumberRange.new(5,SnowSettings.Lifetime); snowEmitter.Rate=SnowSettings.Rate; snowEmitter.RotSpeed=NumberRange.new(360,360); snowEmitter.Rotation=NumberRange.new(20,20); snowEmitter.Shape=Enum.ParticleEmitterShape.Box; snowEmitter.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,.2,.4),NumberSequenceKeypoint.new(1,.2,.4)}); snowEmitter.Speed=NumberRange.new(SnowSettings.Speed); snowEmitter.SpreadAngle=Vector2.new(90,90); snowEmitter.Texture='rbxassetid://129110349'; snowEmitter.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.8625),NumberSequenceKeypoint.new(.15,0),NumberSequenceKeypoint.new(.196326,.70625),NumberSequenceKeypoint.new(1,0)}); snowEmitter.Parent=snowPart end
-    VisualsTab:Toggle({Title='Rain',Default=false,Callback=function(v) RainSettings.Enabled=v; if rainConnection then rainConnection:Disconnect(); rainConnection=nil end; if v then u991(); rainConnection=VisualsRunService.Heartbeat:Connect(function() if rainPart then rainPart.CFrame=CFrame.new(VisualsCamera.CFrame.Position+Vector3.new(0,30,0)) end end) elseif rainPart then rainPart:Destroy(); rainPart=nil end end})
-    VisualsTab:ColorPicker({Title='Rain Color',Default=RainSettings.Color,Callback=function(v) RainSettings.Color=v; if RainSettings.Enabled then u991() end end})
-    VisualsTab:Slider({Title='Rain Amount',Min=1,Max=10000,Default=1000,Step=1,Callback=function(v) RainSettings.Rate=v; if RainSettings.Enabled then u991() end end})
-    VisualsTab:Slider({Title='Rain Speed',Min=10,Max=1000,Default=100,Step=1,Callback=function(v) RainSettings.Speed=v; if RainSettings.Enabled then u991() end end})
-    VisualsTab:Toggle({Title='Snow',Default=false,Callback=function(v) SnowSettings.Enabled=v; if snowConnection then snowConnection:Disconnect(); snowConnection=nil end; if v then u992(); snowConnection=VisualsRunService.Heartbeat:Connect(function() if snowPart then snowPart.CFrame=CFrame.new(VisualsCamera.CFrame.Position+Vector3.new(0,5,0)) end end) elseif snowPart then snowPart:Destroy(); snowPart=nil end end})
-    VisualsTab:ColorPicker({Title='Snow Color',Default=SnowSettings.Color,Callback=function(v) SnowSettings.Color=v; if SnowSettings.Enabled then u992() end end})
-    VisualsTab:Slider({Title='Snow Amount',Min=1,Max=1000,Default=100,Step=1,Callback=function(v) SnowSettings.Rate=v; if SnowSettings.Enabled then u992() end end})
-    VisualsTab:Slider({Title='Snow Speed',Min=1,Max=1000,Default=10,Step=1,Callback=function(v) SnowSettings.Speed=v; if SnowSettings.Enabled then u992() end end})
+    -- Crosshair
+    local CrosshairEnabled=false; local CrosshairText=true; local CrosshairRainbow=false; local CrosshairColor=Color3.new(1,1,1); local CrosshairGui; local CrosshairContainer; local CrosshairLines={}; local CrosshairLabel; local CrosshairSpeed=0.8
+    u921 = function(parent,size,pos,color) local f=Instance.new('Frame'); f.Size=size; f.Position=pos; f.BackgroundColor3=color; f.BorderSizePixel=0; f.Parent=parent; local st=Instance.new('UIStroke',f); st.Color=Color3.new(0,0,0); st.Thickness=1; return f end
+    u922 = function(parent,text,pos,color) local l=Instance.new('TextLabel'); l.Text=text; l.Position=pos; l.TextColor3=color; l.Font=Enum.Font.Arcade; l.TextScaled=true; l.BackgroundTransparency=1; l.Size=UDim2.new(0,150,0,23); l.Parent=parent; local st=Instance.new('UIStroke',l); st.Color=Color3.new(0,0,0); return l end
+    u923 = function() if CrosshairGui then CrosshairGui:Destroy(); CrosshairGui=nil end end
+    u924 = function() u923(); local pg=Players.LocalPlayer:FindFirstChildOfClass('PlayerGui'); if not pg then return end; CrosshairGui=Instance.new('ScreenGui'); CrosshairGui.Name='CrystalHubCrosshair'; CrosshairGui.ResetOnSpawn=false; CrosshairGui.Parent=pg; CrosshairContainer=Instance.new('Frame'); CrosshairContainer.Size=UDim2.new(0,25,0,25); CrosshairContainer.AnchorPoint=Vector2.new(.5,.5); CrosshairContainer.BackgroundTransparency=1; CrosshairContainer.Parent=CrosshairGui; CrosshairLines.top=u921(CrosshairContainer,UDim2.new(0,3,0,25),UDim2.new(.5,-1.5,0,0),CrosshairColor); CrosshairLines.bottom=u921(CrosshairContainer,UDim2.new(0,3,0,25),UDim2.new(.5,-1.5,1,-25),CrosshairColor); CrosshairLines.left=u921(CrosshairContainer,UDim2.new(0,25,0,3),UDim2.new(0,0,.5,-1.5),CrosshairColor); CrosshairLines.right=u921(CrosshairContainer,UDim2.new(0,25,0,3),UDim2.new(1,-25,.5,-1.5),CrosshairColor); CrosshairLabel=u922(CrosshairGui,'Matcha.cc',UDim2.new(0,0,0,0),CrosshairColor); CrosshairLabel.Visible=CrosshairText end
+    u925 = function() if CrosshairEnabled then u924() else u923() end end
+    u926 = function() if not CrosshairContainer then return end; local m=Players.LocalPlayer:GetMouse(); CrosshairContainer.Position=UDim2.new(0,m.X,0,m.Y); if CrosshairLabel then CrosshairLabel.Position=UDim2.new(0,m.X-70,0,m.Y+50); CrosshairLabel.Visible=CrosshairText end; local c=CrosshairRainbow and Color3.fromHSV((tick()%5)/5,1,1) or CrosshairColor; for _,f in pairs(CrosshairLines) do f.BackgroundColor3=c end end
+    RunService.RenderStepped:Connect(u926)
+    VisualsTab:Paragraph({Title='Crosshair', Content=''})
+    local CrossGroup=VisualsTab
+    CrossGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) CrosshairEnabled=v; u925() end})
+    CrossGroup:Toggle({Title='Text',Default=true,Callback=function(v) CrosshairText=v end})
+    CrossGroup:Toggle({Title='Rainbow',Default=false,Callback=function(v) CrosshairRainbow=v end})
+    CrossGroup:ColorPicker({Title='Color',Default=CrosshairColor,Callback=function(v) CrosshairColor=v end})
+    CrossGroup:Button({Title='Spin Speed',Callback=function() v25('Spin Speed',0.1,2,CrosshairSpeed,0.1,function(v) CrosshairSpeed=v end,function() CrosshairSpeed=.8 end) end})
 
-    local WorldOriginal={Ambient=VisualsLighting.Ambient,OutdoorAmbient=VisualsLighting.OutdoorAmbient,FogColor=VisualsLighting.FogColor,FogStart=VisualsLighting.FogStart,FogEnd=VisualsLighting.FogEnd,Brightness=VisualsLighting.Brightness,ClockTime=VisualsLighting.ClockTime,GlobalShadows=VisualsLighting.GlobalShadows,Diffuse=VisualsLighting.EnvironmentDiffuseScale,Specular=VisualsLighting.EnvironmentSpecularScale,Exposure=VisualsLighting.ExposureCompensation,Bottom=VisualsLighting.ColorShift_Bottom,Top=VisualsLighting.ColorShift_Top,Latitude=VisualsLighting.GeographicLatitude}; local WorldValues={Ambient=WorldOriginal.Ambient,Outdoor=WorldOriginal.OutdoorAmbient,FogColor=WorldOriginal.FogColor,FogStart=WorldOriginal.FogStart,FogEnd=WorldOriginal.FogEnd,Brightness=WorldOriginal.Brightness,Clock=WorldOriginal.ClockTime,Diffuse=WorldOriginal.Diffuse,Specular=WorldOriginal.Specular,Exposure=WorldOriginal.Exposure,Bottom=WorldOriginal.Bottom,Top=WorldOriginal.Top,Latitude=WorldOriginal.Latitude,Nebula=Color3.fromRGB(173,216,230)}
-    u993=function(asset) local sky=VisualsLighting:FindFirstChildOfClass('Sky'); if sky then sky:Destroy() end; if asset and asset~='' then sky=Instance.new('Sky'); sky.Name='CrystalHubCustomSky'; sky.SkyboxBk=asset; sky.SkyboxDn=asset; sky.SkyboxFt=asset; sky.SkyboxLf=asset; sky.SkyboxRt=asset; sky.SkyboxUp=asset; sky.Parent=VisualsLighting end end
-    u994=function() local sky=VisualsLighting:FindFirstChild('CrystalHubCustomSky'); if sky then sky:Destroy() end end
-    VisualsTab:Paragraph({Title='World',Content='World controls from the source visual section.'})
-    VisualsTab:Toggle({Title='Custom Ambient',Default=false,Callback=function(v) VisualsLighting.Ambient=v and WorldValues.Ambient or WorldOriginal.Ambient end}); VisualsTab:ColorPicker({Title='Ambient Color',Default=WorldOriginal.Ambient,Callback=function(v) WorldValues.Ambient=v end})
-    VisualsTab:Toggle({Title='Custom Outdoor Ambient',Default=false,Callback=function(v) VisualsLighting.OutdoorAmbient=v and WorldValues.Outdoor or WorldOriginal.OutdoorAmbient end}); VisualsTab:ColorPicker({Title='Outdoor Ambient Color',Default=WorldOriginal.OutdoorAmbient,Callback=function(v) WorldValues.Outdoor=v end})
-    VisualsTab:Toggle({Title='Custom Fog',Default=false,Callback=function(v) if v then VisualsLighting.FogColor=WorldValues.FogColor; VisualsLighting.FogStart=WorldValues.FogStart; VisualsLighting.FogEnd=WorldValues.FogEnd else VisualsLighting.FogColor=WorldOriginal.FogColor; VisualsLighting.FogStart=WorldOriginal.FogStart; VisualsLighting.FogEnd=WorldOriginal.FogEnd end end}); VisualsTab:ColorPicker({Title='Fog Color',Default=WorldOriginal.FogColor,Callback=function(v) WorldValues.FogColor=v end})
-    VisualsTab:Slider({Title='Fog Start',Min=0,Max=1000,Default=WorldOriginal.FogStart,Step=1,Callback=function(v) WorldValues.FogStart=v; VisualsLighting.FogStart=v end}); VisualsTab:Slider({Title='Fog End',Min=0,Max=1000,Default=WorldOriginal.FogEnd,Step=1,Callback=function(v) WorldValues.FogEnd=v; VisualsLighting.FogEnd=v end})
-    VisualsTab:Toggle({Title='Custom Brightness',Default=false,Callback=function(v) VisualsLighting.Brightness=v and WorldValues.Brightness or WorldOriginal.Brightness end}); VisualsTab:Slider({Title='Brightness',Min=0,Max=10,Default=WorldOriginal.Brightness,Step=.1,Callback=function(v) WorldValues.Brightness=v; VisualsLighting.Brightness=v end})
-    VisualsTab:Toggle({Title='Custom Clock Time',Default=false,Callback=function(v) VisualsLighting.ClockTime=v and WorldValues.Clock or WorldOriginal.ClockTime end}); VisualsTab:Slider({Title='Clock Time',Min=0,Max=24,Default=WorldOriginal.ClockTime,Step=.1,Callback=function(v) WorldValues.Clock=v; VisualsLighting.ClockTime=v end})
-    VisualsTab:Toggle({Title='Global Shadows',Default=WorldOriginal.GlobalShadows,Callback=function(v) VisualsLighting.GlobalShadows=v end})
-    VisualsTab:Slider({Title='Environment Diffuse',Min=0,Max=1,Default=WorldOriginal.Diffuse,Step=.01,Callback=function(v) WorldValues.Diffuse=v; VisualsLighting.EnvironmentDiffuseScale=v end}); VisualsTab:Slider({Title='Environment Specular',Min=0,Max=1,Default=WorldOriginal.Specular,Step=.01,Callback=function(v) WorldValues.Specular=v; VisualsLighting.EnvironmentSpecularScale=v end})
-    VisualsTab:Slider({Title='Exposure',Min=-3,Max=3,Default=WorldOriginal.Exposure,Step=.1,Callback=function(v) WorldValues.Exposure=v; VisualsLighting.ExposureCompensation=v end}); VisualsTab:ColorPicker({Title='Color Shift Bottom',Default=WorldOriginal.Bottom,Callback=function(v) WorldValues.Bottom=v; VisualsLighting.ColorShift_Bottom=v end}); VisualsTab:ColorPicker({Title='Color Shift Top',Default=WorldOriginal.Top,Callback=function(v) WorldValues.Top=v; VisualsLighting.ColorShift_Top=v end}); VisualsTab:Slider({Title='Geographic Latitude',Min=-90,Max=90,Default=WorldOriginal.Latitude,Step=1,Callback=function(v) WorldValues.Latitude=v; VisualsLighting.GeographicLatitude=v end})
-    VisualsTab:Toggle({Title='Nebula Theme',Default=false,Callback=function(v) if v then local b=Instance.new('BloomEffect',VisualsLighting); b.Name='NebulaBloom'; b.Intensity=.7; b.Size=24; b.Threshold=1; local c=Instance.new('ColorCorrectionEffect',VisualsLighting); c.Name='NebulaColorCorrection'; c.Saturation=.5; c.Contrast=.2; c.TintColor=WorldValues.Nebula; local a=Instance.new('Atmosphere',VisualsLighting); a.Name='NebulaAtmosphere'; a.Density=.4; a.Offset=.25; a.Glare=1; a.Haze=2; a.Color=WorldValues.Nebula; a.Decay=WorldValues.Nebula else for _,n in ipairs({'NebulaBloom','NebulaColorCorrection','NebulaAtmosphere'}) do local o=VisualsLighting:FindFirstChild(n); if o then o:Destroy() end end end end}); VisualsTab:ColorPicker({Title='Nebula Color',Default=WorldValues.Nebula,Callback=function(v) WorldValues.Nebula=v end})
-    VisualsTab:Paragraph({Title='Custom Skybox Asset ID',Content='Custom asset input is unavailable in the original CrystalHub UI API; skybox restore function is retained.'}); VisualsTab:Button({Title='Restore Default Skybox',Callback=u994})
+    -- Rain / Snow
+    local RainEnabled=false; local SnowEnabled=false; local RainColor=Color3.new(1,1,1); local SnowColor=Color3.new(1,1,1); local RainRate=1000; local SnowRate=100; local RainSpeed=100; local SnowSpeed=30; local RainPart; local SnowPart; local RainConn; local SnowConn
+    u927 = function(kind)
+        local old=(kind=='rain' and RainPart or SnowPart); if old then old:Destroy() end
+        local part=Instance.new('Part'); part.Name=(kind=='rain' and 'CrystalHubRain' or 'CrystalHubSnow'); part.Size=Vector3.new(52,.1,52); part.Anchored=true; part.CanCollide=false; part.Transparency=1; part.Parent=workspace
+        local pe=Instance.new('ParticleEmitter'); pe.Color=ColorSequence.new(kind=='rain' and RainColor or SnowColor); pe.Rate=(kind=='rain' and RainRate or SnowRate); pe.Speed=NumberRange.new(kind=='rain' and RainSpeed or SnowSpeed); pe.Lifetime=NumberRange.new(2,5); pe.EmissionDirection=Enum.NormalId.Bottom; pe.SpreadAngle=Vector2.new(90,90); pe.Texture=(kind=='rain' and 'rbxassetid://12781852245' or 'rbxassetid://129110349'); pe.Parent=part
+        if kind=='rain' then RainPart=part else SnowPart=part end
+    end
+    u928 = function() if RainConn then RainConn:Disconnect(); RainConn=nil end; if SnowConn then SnowConn:Disconnect(); SnowConn=nil end; if RainPart then RainPart:Destroy(); RainPart=nil end; if SnowPart then SnowPart:Destroy(); SnowPart=nil end end
+    VisualsTab:Paragraph({Title='Rain / Snow', Content=''})
+    local RainGroup=VisualsTab
+    RainGroup:Toggle({Title='Rain Enabled',Default=false,Callback=function(v) RainEnabled=v; if RainConn then RainConn:Disconnect(); RainConn=nil end; if v then u927('rain'); RainConn=RunService.Heartbeat:Connect(function() if RainPart and CurrentCamera then RainPart.CFrame=CFrame.new(CurrentCamera.CFrame.Position+Vector3.new(0,30,0)) end end) elseif RainPart then RainPart:Destroy(); RainPart=nil end end})
+    RainGroup:ColorPicker({Title='Rain Color',Default=RainColor,Callback=function(v) RainColor=v; if RainEnabled then u927('rain') end end})
+    RainGroup:Toggle({Title='Snow Enabled',Default=false,Callback=function(v) SnowEnabled=v; if SnowConn then SnowConn:Disconnect(); SnowConn=nil end; if v then u927('snow'); SnowConn=RunService.Heartbeat:Connect(function() if SnowPart and CurrentCamera then SnowPart.CFrame=CFrame.new(CurrentCamera.CFrame.Position+Vector3.new(0,5,0)) end end) elseif SnowPart then SnowPart:Destroy(); SnowPart=nil end end})
+    RainGroup:ColorPicker({Title='Snow Color',Default=SnowColor,Callback=function(v) SnowColor=v; if SnowEnabled then u927('snow') end end})
+    RainGroup:Button({Title='Rain/Snow Amount & Speed',Callback=function() v25('Rain Amount',1,10000,RainRate,10,function(v) RainRate=v; if RainEnabled then u927('rain') end end,function() RainRate=1000 end); v25('Rain Speed',10,1000,RainSpeed,10,function(v) RainSpeed=v; if RainEnabled then u927('rain') end end,function() RainSpeed=100 end); v25('Snow Amount',1,1000,SnowRate,10,function(v) SnowRate=v; if SnowEnabled then u927('snow') end end,function() SnowRate=100 end); v25('Snow Speed',1,1000,SnowSpeed,10,function(v) SnowSpeed=v; if SnowEnabled then u927('snow') end end,function() SnowSpeed=30 end) end})
 
-    -- Source Stomp Effects control; it safely falls back if the optional source module is absent.
-    VisualsTab:Toggle({Title='Stomp Effects',Default=false,Callback=function(v) if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) else v18:Notify({Title='CrystalHub',Content='Stomp Effects module is not available.',Duration=3,Icon='bell'}) end end})
-    VisualsTab:Dropdown({Title='Stomp Effect',Values={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) if States then States.StompEffect=v end end})
+    -- World / Lighting / Skybox
+    local WorldOriginal={Ambient=Lighting.Ambient,Outdoor=Lighting.OutdoorAmbient,FogColor=Lighting.FogColor,FogStart=Lighting.FogStart,FogEnd=Lighting.FogEnd,Brightness=Lighting.Brightness,ClockTime=Lighting.ClockTime,GlobalShadows=Lighting.GlobalShadows}
+    local WorldAmbient=WorldOriginal.Ambient; local WorldOutdoor=WorldOriginal.Outdoor; local WorldFog=WorldOriginal.FogColor; local WorldFogStart=WorldOriginal.FogStart; local WorldFogEnd=WorldOriginal.FogEnd; local WorldBrightness=WorldOriginal.Brightness; local WorldClock=WorldOriginal.ClockTime; local WorldSky
+    u929 = function(name)
+        if WorldSky then WorldSky:Destroy(); WorldSky=nil end
+        if name=='Roblox Default' then return end
+        local ids={['Blue Space']={'rbxassetid://159454299','rbxassetid://159454296','rbxassetid://159454293','rbxassetid://159454286','rbxassetid://159454300','rbxassetid://159454288'},['Snow']={'rbxassetid://160174370','rbxassetid://160174371','rbxassetid://160174372','rbxassetid://160174373','rbxassetid://160174374','rbxassetid://160174375'},['Sunset']={'rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758'}}
+        local x=ids[name] or ids['Blue Space']; WorldSky=Instance.new('Sky'); WorldSky.Name='CrystalHubCustomSky'; WorldSky.SkyboxBk=x[1]; WorldSky.SkyboxDn=x[2]; WorldSky.SkyboxFt=x[3]; WorldSky.SkyboxLf=x[4]; WorldSky.SkyboxRt=x[5]; WorldSky.SkyboxUp=x[6]; WorldSky.Parent=Lighting
+    end
+    VisualsTab:Paragraph({Title='World', Content=''})
+    local WorldGroup=VisualsTab
+    WorldGroup:Toggle({Title='Custom Ambient',Default=false,Callback=function(v) Lighting.Ambient=v and WorldAmbient or WorldOriginal.Ambient end}); WorldGroup:ColorPicker({Title='Ambient Color',Default=WorldAmbient,Callback=function(v) WorldAmbient=v end})
+    WorldGroup:Toggle({Title='Custom Outdoor Ambient',Default=false,Callback=function(v) Lighting.OutdoorAmbient=v and WorldOutdoor or WorldOriginal.Outdoor end}); WorldGroup:ColorPicker({Title='Outdoor Color',Default=WorldOutdoor,Callback=function(v) WorldOutdoor=v end})
+    WorldGroup:Toggle({Title='Custom Fog',Default=false,Callback=function(v) if v then Lighting.FogColor=WorldFog; Lighting.FogStart=WorldFogStart; Lighting.FogEnd=WorldFogEnd else Lighting.FogColor=WorldOriginal.FogColor; Lighting.FogStart=WorldOriginal.FogStart; Lighting.FogEnd=WorldOriginal.FogEnd end end}); WorldGroup:ColorPicker({Title='Fog Color',Default=WorldFog,Callback=function(v) WorldFog=v end})
+    WorldGroup:Button({Title='Fog Start / End',Callback=function() v25('Fog Start',0,1000,WorldFogStart,1,function(v) WorldFogStart=v; Lighting.FogStart=v end,function() WorldFogStart=WorldOriginal.FogStart end); v25('Fog End',0,1000,WorldFogEnd,1,function(v) WorldFogEnd=v; Lighting.FogEnd=v end,function() WorldFogEnd=WorldOriginal.FogEnd end) end})
+    WorldGroup:Toggle({Title='Custom Brightness',Default=false,Callback=function(v) Lighting.Brightness=v and WorldBrightness or WorldOriginal.Brightness end}); WorldGroup:Button({Title='Brightness / Clock Time',Callback=function() v25('Brightness',0,10,WorldBrightness,0.1,function(v) WorldBrightness=v; Lighting.Brightness=v end,function() WorldBrightness=WorldOriginal.Brightness end); v25('Clock Time',0,24,WorldClock,0.1,function(v) WorldClock=v; Lighting.ClockTime=v end,function() WorldClock=WorldOriginal.ClockTime end) end})
+    WorldGroup:Toggle({Title='Global Shadows',Default=WorldOriginal.GlobalShadows,Callback=function(v) Lighting.GlobalShadows=v end})
+    WorldGroup:Dropdown({Title='Skybox',Options={'Roblox Default','Blue Space','Snow','Sunset'},Default='Roblox Default',Callback=function(v) u929(v) end})
+    WorldGroup:Button({Title='Remove Custom Skybox',Callback=function() if WorldSky then WorldSky:Destroy(); WorldSky=nil end end})
 
-    -- Keep the original CrystalHub visual controls too.
-    VisualsTab:Divider()
-    VisualsTab:Paragraph({Title='Graphics',Content='Original CrystalHub graphics and FOV controls.'})
-    VisualsTab:Toggle({Title='Low Graphics (FPS Boost)',Default=false,Callback=function(v) if v then pcall(function() settings().Rendering.QualityLevel=Enum.QualityLevel.Level01 end); pcall(function() setfpscap(9999) end); Lighting.GlobalShadows=false; Lighting.Brightness=2 else pcall(function() settings().Rendering.QualityLevel=Enum.QualityLevel.Automatic end) end end})
-    VisualsTab:Toggle({Title='High Graphics (Beautiful)',Default=false,Callback=function(v) if v then pcall(function() settings().Rendering.QualityLevel=Enum.QualityLevel.Level21 end); Lighting.GlobalShadows=true; Lighting.Brightness=3.5; local b=Lighting:FindFirstChild('CrystalHubBloom') or Instance.new('BloomEffect',Lighting); b.Name='CrystalHubBloom'; b.Intensity=.6; b.Size=24; b.Threshold=.95; local r=Lighting:FindFirstChild('CrystalHubSunRays') or Instance.new('SunRaysEffect',Lighting); r.Name='CrystalHubSunRays'; r.Intensity=.25; r.Spread=1 else for _,n in ipairs({'CrystalHubBloom','CrystalHubSunRays'}) do local o=Lighting:FindFirstChild(n); if o then o:Destroy() end end end end})
-    VisualsTab:Button({Title='FOV Slider',Callback=function() v25('Field of View',30,120,n3,5,function(v) n3=v; CurrentCamera.FieldOfView=v end,function() n3=70; CurrentCamera.FieldOfView=70 end) end})
+    -- Stomp Effects: use the source module when the host script provides it.
+    VisualsTab:Paragraph({Title='StompEffects', Content=''})
+    local StompGroup=VisualsTab
+    local StompOn=false; local StompEffect='Thanos'
+    StompGroup:Toggle({Title='Stompeffects',Default=false,Callback=function(v) StompOn=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) end end})
+    StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
+
+    VisualsTab:Paragraph({Title='Visuals',Content='Visual functions ported from the ZIP. ESP-specific controls stay in the ESP tab.'})
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
@@ -4005,21 +4036,6 @@ do
     end
 
     v301:Toggle(t29)
-end
-
-v301:Divider()
-v301:Paragraph({
-    Title = 'Shot Sound',
-    Content = 'Plays a custom sound when a gun-like Tool is activated.',
-})
-do
-    local ShotSoundEnabled=false
-    local ShotSoundId='rbxassetid://6899466638'
-    local ShotSoundConnections={}
-    u995=function() for _,c in ipairs(ShotSoundConnections) do pcall(function() c:Disconnect() end) end; table.clear(ShotSoundConnections) end
-    u996=function(tool) if not tool or not tool:IsA('Tool') then return end; local name=tool.Name:lower(); if not(name:find('gun') or name:find('revolver') or name:find('pistol') or name:find('rifle') or name:find('shot')) then return end; table.insert(ShotSoundConnections,tool.Activated:Connect(function() if not ShotSoundEnabled then return end; local sound=Instance.new('Sound'); sound.SoundId=ShotSoundId; sound.Volume=1; sound.PlayOnRemove=true; sound.Parent=game:GetService('SoundService'); sound:Destroy() end)) end
-    u997=function() u995(); local c=LocalPlayer.Character; if c then for _,x in ipairs(c:GetChildren()) do u996(x) end; table.insert(ShotSoundConnections,c.ChildAdded:Connect(u996)) end; table.insert(ShotSoundConnections,LocalPlayer.CharacterAdded:Connect(function(ch) task.wait(.25); for _,x in ipairs(ch:GetChildren()) do u996(x) end; table.insert(ShotSoundConnections,ch.ChildAdded:Connect(u996)) end)) end
-    v301:Toggle({Title='Custom Shot Sound',Default=false,Callback=function(v) ShotSoundEnabled=v; if v then u997() else u995() end end})
 end
 
 v301:Divider()
@@ -5208,51 +5224,6 @@ function t50.Callback(p88)
 end
 
 v302:ColorPicker(t50)
-    -- ESP from the supplied Visual section belongs in the ESP tab, not Visuals.
-    local SourceESP={Enabled=false,Box=false,BoxColor=Color3.fromRGB(103,89,179),Outline=true,OutlineColor=Color3.new(0,0,0),Name=false,Distance=false,Skeleton=false,SkeletonColor=Color3.fromRGB(103,89,179),HealthBar=false,HealthText=false,Tracer=false,Chams=false,ChamsColor=Color3.fromRGB(103,89,179),ChamsTransparency=.5,TeamCheck=true,DistanceLimit=1000}
-    local SourceESPObjects={}
-    u998=function(player)
-        local o=SourceESPObjects[player]; if o then for _,x in pairs(o) do if typeof(x)=='Instance' then pcall(function() x:Destroy() end) end end end; SourceESPObjects[player]=nil
-    end
-    u999=function(player)
-        if not SourceESP.Enabled or player==VisualsLocalPlayer or not player.Character then return end
-        if SourceESP.TeamCheck and player.Team and VisualsLocalPlayer.Team and player.Team==VisualsLocalPlayer.Team then return end
-        u998(player)
-        local c=player.Character; local root=c:FindFirstChild('HumanoidRootPart'); local hum=c:FindFirstChildOfClass('Humanoid'); if not root or not hum then return end
-        local h=Instance.new('Highlight'); h.Name='CrystalHubSourceESP'; h.Adornee=c; h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.FillColor=SourceESP.ChamsColor; h.FillTransparency=SourceESP.Chams and SourceESP.ChamsTransparency or 1; h.OutlineColor=SourceESP.OutlineColor; h.OutlineTransparency=SourceESP.Outline and 0 or 1; h.Enabled=SourceESP.Box or SourceESP.Chams; h.Parent=c
-        local gui=Instance.new('BillboardGui'); gui.Name='CrystalHubSourceESPInfo'; gui.Adornee=root; gui.AlwaysOnTop=true; gui.Size=UDim2.fromOffset(180,70); gui.StudsOffset=Vector3.new(0,3,0); gui.Parent=root
-        local txt=Instance.new('TextLabel'); txt.BackgroundTransparency=1; txt.Size=UDim2.fromScale(1,1); txt.TextColor3=SourceESP.BoxColor; txt.TextStrokeTransparency=0; txt.TextSize=13; txt.Parent=gui
-        local bar=Instance.new('Frame'); bar.BackgroundColor3=Color3.new(0,1,0); bar.BorderSizePixel=0; bar.AnchorPoint=Vector2.new(0,1); bar.Position=UDim2.new(0,0,1,0); bar.Size=UDim2.new(1,0,0,4); bar.Visible=SourceESP.HealthBar; bar.Parent=gui
-        SourceESPObjects[player]={h,gui,txt,bar}
-    end
-    u1000=function()
-        for _,p in ipairs(VisualsPlayers:GetPlayers()) do if p~=VisualsLocalPlayer then u999(p) end end
-    end
-    u1001=function()
-        for p in pairs(SourceESPObjects) do u998(p) end
-    end
-    u1002=function()
-        for p,o in pairs(SourceESPObjects) do
-            if not p.Parent or not p.Character then u998(p) else local root=p.Character:FindFirstChild('HumanoidRootPart'); local hum=p.Character:FindFirstChildOfClass('Humanoid'); local dist=root and VisualsLocalPlayer.Character and VisualsLocalPlayer.Character:FindFirstChild('HumanoidRootPart') and (root.Position-VisualsLocalPlayer.Character.HumanoidRootPart.Position).Magnitude or math.huge; if dist>SourceESP.DistanceLimit then u998(p) else local gui=o[2]; local txt=o[3]; local bar=o[4]; if gui and txt then local parts={}; if SourceESP.Name then table.insert(parts,p.Name) end; if SourceESP.Distance then table.insert(parts,string.format('[%d]',math.floor(dist))) end; if SourceESP.HealthText and hum then table.insert(parts,string.format('HP %d',math.floor(hum.Health))) end; txt.Text=table.concat(parts,' ') end; if bar and hum then bar.Visible=SourceESP.HealthBar; bar.Size=UDim2.new(math.clamp(hum.Health/math.max(hum.MaxHealth,1),0,1),0,0,4) end end end end
-    end
-    VisualsRunService.RenderStepped:Connect(function() if SourceESP.Enabled then u1002() end end)
-    VisualsPlayers.PlayerAdded:Connect(function(p) p.CharacterAdded:Connect(function() task.wait(.2); if SourceESP.Enabled then u999(p) end end) end)
-    v302:Divider()
-    v302:Paragraph({Title='Source ESP',Content='ESP functions from the supplied Visual/ESP source, kept in the ESP tab.'})
-    v302:Toggle({Title='Source ESP Enabled',Default=false,Callback=function(v) SourceESP.Enabled=v; if v then u1000() else u1001() end end})
-    v302:Toggle({Title='Box ESP',Default=false,Callback=function(v) SourceESP.Box=v; if SourceESP.Enabled then u1000() end end})
-    v302:ColorPicker({Title='Box Color',Default=SourceESP.BoxColor,Callback=function(v) SourceESP.BoxColor=v end})
-    v302:Toggle({Title='Box Outline',Default=true,Callback=function(v) SourceESP.Outline=v; if SourceESP.Enabled then u1000() end end})
-    v302:ColorPicker({Title='Outline Color',Default=SourceESP.OutlineColor,Callback=function(v) SourceESP.OutlineColor=v end})
-    v302:Toggle({Title='Name ESP',Default=false,Callback=function(v) SourceESP.Name=v end})
-    v302:Toggle({Title='Distance ESP',Default=false,Callback=function(v) SourceESP.Distance=v end})
-    v302:Toggle({Title='Health Bar',Default=false,Callback=function(v) SourceESP.HealthBar=v end})
-    v302:Toggle({Title='Health Text',Default=false,Callback=function(v) SourceESP.HealthText=v end})
-    v302:Toggle({Title='Chams',Default=false,Callback=function(v) SourceESP.Chams=v; if SourceESP.Enabled then u1000() end end})
-    v302:ColorPicker({Title='Chams Color',Default=SourceESP.ChamsColor,Callback=function(v) SourceESP.ChamsColor=v; if SourceESP.Enabled then u1000() end end})
-    v302:Toggle({Title='Team Check',Default=true,Callback=function(v) SourceESP.TeamCheck=v; if SourceESP.Enabled then u1000() end end})
-    v302:Slider({Title='ESP Distance',Min=100,Max=1000,Default=1000,Step=10,Callback=function(v) SourceESP.DistanceLimit=v end})
-
 task.wait(0.4)
 v232(true)
 v239(true)
