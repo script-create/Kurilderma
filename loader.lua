@@ -4731,95 +4731,95 @@ VisualsTab:Button({
     end,
 })
 
--- ============================================================
---  HAT — UI блок во вкладке Visuals
--- ============================================================
-VisualsTab:Divider()
-VisualsTab:Paragraph({
-    Title   = '🎩 Hat System',
-    Content = 'Шляпа над головой — Classic (3D) или Drawing (2D).',
-})
+    -- ============================================================
+    --  HAT — UI блок во вкладке Visuals
+    -- ============================================================
+    VisualsTab:Divider()
+    VisualsTab:Paragraph({
+        Title   = '🎩 Hat System',
+        Content = 'Шляпа над головой — Classic (3D) или Drawing (2D).',
+    })
 
-VisualsTab:Toggle({
-    Title   = 'Enable Hat',
-    Default = false,
-    Callback = function(v)
-        Hat_ToggleEnabled(v)
-    end,
-})
+    VisualsTab:Toggle({
+        Title   = 'Enable Hat',
+        Default = false,
+        Callback = function(v)
+            Hat_ToggleEnabled(v)
+        end,
+    })
 
-VisualsTab:Dropdown({
-    Title  = 'Hat Style',
-    Values = {'Classic', 'Drawing'},
-    Value  = 'Classic',
-    Callback = function(v)
-        Hat_ChangeStyle(v)
-    end,
-})
+    VisualsTab:Dropdown({
+        Title  = 'Hat Style',
+        Values = {'Classic', 'Drawing'},
+        Value  = 'Classic',
+        Callback = function(v)
+            Hat_ChangeStyle(v)
+        end,
+    })
 
-VisualsTab:Toggle({
-    Title   = 'Rainbow Mode',
-    Default = false,
-    Callback = function(v)
-        HatVariables.rainbow = v
-    end,
-})
+    VisualsTab:Toggle({
+        Title   = 'Rainbow Mode',
+        Default = false,
+        Callback = function(v)
+            HatVariables.rainbow = v
+        end,
+    })
 
-VisualsTab:ColorPicker({
-    Title   = 'Hat Color',
-    Default = Color3.fromRGB(255, 40, 40),
-    Callback = function(v)
-        HatVariables.color = v
-    end,
-})
+    VisualsTab:ColorPicker({
+        Title   = 'Hat Color',
+        Default = Color3.fromRGB(255, 40, 40),
+        Callback = function(v)
+            HatVariables.color = v
+        end,
+    })
 
-VisualsTab:Button({
-    Title       = 'Radius Slider',
-    Description = 'Размер шляпы по горизонтали (0.5 – 4)',
-    Callback = function()
-        v25('Hat Radius', 5, 40, math.round(HatVariables.radius * 10), 1, function(val)
-            HatVariables.radius = val / 10
-        end, function()
-            HatVariables.radius = 1.5
-        end)
-    end,
-})
+    VisualsTab:Button({
+        Title       = 'Radius Slider',
+        Description = 'Размер шляпы по горизонтали (0.5 – 4)',
+        Callback = function()
+            v25('Hat Radius', 5, 40, math.round(HatVariables.radius * 10), 1, function(val)
+                HatVariables.radius = val / 10
+            end, function()
+                HatVariables.radius = 1.5
+            end)
+        end,
+    })
 
-VisualsTab:Button({
-    Title       = 'Height Slider',
-    Description = 'Высота шляпы (0.2 – 2.0)',
-    Callback = function()
-        v25('Hat Height', 2, 20, math.round(HatVariables.height * 10), 1, function(val)
-            HatVariables.height = val / 10
-        end, function()
-            HatVariables.height = 0.8
-        end)
-    end,
-})
+    VisualsTab:Button({
+        Title       = 'Height Slider',
+        Description = 'Высота шляпы (0.2 – 2.0)',
+        Callback = function()
+            v25('Hat Height', 2, 20, math.round(HatVariables.height * 10), 1, function(val)
+                HatVariables.height = val / 10
+            end, function()
+                HatVariables.height = 0.8
+            end)
+        end,
+    })
 
-VisualsTab:Button({
-    Title       = 'Transparency Slider',
-    Description = 'Прозрачность (0 = полная, 10 = непрозрачная)',
-    Callback = function()
-        v25('Hat Transparency', 0, 10, math.round((1 - HatVariables.transparency) * 10), 1, function(val)
-            HatVariables.transparency = 1 - val / 10
-        end, function()
-            HatVariables.transparency = 0.3
-        end)
-    end,
-})
+    VisualsTab:Button({
+        Title       = 'Transparency Slider',
+        Description = 'Прозрачность (0 = полная, 10 = непрозрачная)',
+        Callback = function()
+            v25('Hat Transparency', 0, 10, math.round((1 - HatVariables.transparency) * 10), 1, function(val)
+                HatVariables.transparency = 1 - val / 10
+            end, function()
+                HatVariables.transparency = 0.3
+            end)
+        end,
+    })
 
-VisualsTab:Button({
-    Title       = 'Sides Slider (Drawing)',
-    Description = 'Кол-во граней для Drawing-стиля (4 – 50)',
-    Callback = function()
-        v25('Hat Sides', 4, 50, HatVariables.sides, 2, function(val)
-            Hat_UpdateSides(val)
-        end, function()
-            Hat_UpdateSides(20)
-        end)
-    end,
-})
+    VisualsTab:Button({
+        Title       = 'Sides Slider (Drawing)',
+        Description = 'Кол-во граней для Drawing-стиля (4 – 50)',
+        Callback = function()
+            v25('Hat Sides', 4, 50, HatVariables.sides, 2, function(val)
+                Hat_UpdateSides(val)
+            end, function()
+                Hat_UpdateSides(20)
+            end)
+        end,
+    })
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
