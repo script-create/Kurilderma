@@ -3846,6 +3846,7 @@ do
         v25('Scale Z (0.5-3)',0.5,3,ChinaScale.Z,0.1,function(v) ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,v); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,1.7) end)
     end})
 
+    local _ok_Aura, _err_Aura = pcall(function()
     -- Safe Aura
     local AuraEnabled = false
     local AuraColor = Color3.fromRGB(0, 255, 120)
@@ -3866,6 +3867,10 @@ do
     AuraGroup:Toggle({Title='Safe',Default=false,Callback=function(v) AuraEnabled=v; local c=Players.LocalPlayer.Character; if v and c then u914(c) elseif c then local t=c:FindFirstChild('UpperTorso') or c:FindFirstChild('Torso'); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end end end})
     AuraGroup:ColorPicker({Title='Aura Color',Default=AuraColor,Callback=function(v) AuraColor=v; if AuraEnabled and Players.LocalPlayer.Character then u914(Players.LocalPlayer.Character) end end})
 
+    end)
+    if not _ok_Aura then warn('[CrystalHub] Visuals Aura failed: '..tostring(_err_Aura)) end
+
+    local _ok_Self, _err_Self = pcall(function()
     -- Self: character / weapon chams and trail
     local CharChams=false; local WeaponChams=false; local CharColor=Color3.new(1,1,1); local WeaponColor=Color3.new(1,1,1); local CharMaterial=Enum.Material.ForceField; local WeaponMaterial=Enum.Material.Neon; local TrailEnabled=false; local TrailColor=Color3.new(1,1,1)
     u916 = function(character)
@@ -3902,6 +3907,10 @@ do
     SelfGroup:Toggle({Title='Character Trail',Default=false,Callback=function(v) TrailEnabled=v; u918(v) end})
     SelfGroup:ColorPicker({Title='Trail Color',Default=TrailColor,Callback=function(v) TrailColor=v; u918(TrailEnabled) end})
 
+    end)
+    if not _ok_Self then warn('[CrystalHub] Visuals Self failed: '..tostring(_err_Self)) end
+
+    local _ok_Bullet, _err_Bullet = pcall(function()
     -- Bullet tracer: visual function and a safe ShootGun hook.
     local BulletTracerEnabled=false; local BulletTracerColor=Color3.fromRGB(255,255,255); local BulletTracerSize=0.4; local BulletTracerTransparency=0; local BulletTracerLife=2; local BulletTracerTexture='rbxassetid://12781852245'
     u919 = function(startPos,endPos)
@@ -3918,6 +3927,10 @@ do
     BulletGroup:Dropdown({Title='Texture',Options={'Beam','Lightning','Heartrate','Chain','Glitch','Swirl'},Default='Beam',Callback=function(v) local ids={Beam='12781852245',Lightning='11481682774',Heartrate='1230763696',Chain='1033714',Glitch='1154459643',Swirl='1049817702'}; BulletTracerTexture='rbxassetid://'..(ids[v] or ids.Beam) end})
     BulletGroup:Button({Title='Size / Transparency / Lifetime',Callback=function() v25('Size',0.1,3,BulletTracerSize,0.1,function(v) BulletTracerSize=v end,function() BulletTracerSize=0.4 end); v25('Transparency',0,1,BulletTracerTransparency,0.05,function(v) BulletTracerTransparency=v end,function() BulletTracerTransparency=0 end); v25('Lifetime',0.2,5,BulletTracerLife,0.1,function(v) BulletTracerLife=v end,function() BulletTracerLife=2 end) end})
 
+    end)
+    if not _ok_Bullet then warn('[CrystalHub] Visuals Bullet failed: '..tostring(_err_Bullet)) end
+
+    local _ok_HUD, _err_HUD = pcall(function()
     -- HUD changer (same target GUI/function as the source, but guarded so missing UI does not break the tab).
     local HudHP=false; local HudArmor=false; local HudEnergy=false; local HudHPColor=Color3.fromRGB(240,8,209); local HudArmorColor=Color3.fromRGB(96,8,238); local HudEnergyColor=Color3.fromRGB(196,10,243)
     u920 = function()
@@ -3930,6 +3943,10 @@ do
     HudGroup:Toggle({Title='Customize Armor',Default=false,Callback=function(v) HudArmor=v; u920() end}); HudGroup:ColorPicker({Title='Armor Color',Default=HudArmorColor,Callback=function(v) HudArmorColor=v; u920() end})
     HudGroup:Toggle({Title='Customize Energy',Default=false,Callback=function(v) HudEnergy=v; u920() end}); HudGroup:ColorPicker({Title='Energy Color',Default=HudEnergyColor,Callback=function(v) HudEnergyColor=v; u920() end})
 
+    end)
+    if not _ok_HUD then warn('[CrystalHub] Visuals HUD failed: '..tostring(_err_HUD)) end
+
+    local _ok_Crosshair, _err_Crosshair = pcall(function()
     -- Crosshair
     local CrosshairEnabled=false; local CrosshairText=true; local CrosshairRainbow=false; local CrosshairColor=Color3.new(1,1,1); local CrosshairGui; local CrosshairContainer; local CrosshairLines={}; local CrosshairLabel; local CrosshairSpeed=0.8
     u921 = function(parent,size,pos,color) local f=Instance.new('Frame'); f.Size=size; f.Position=pos; f.BackgroundColor3=color; f.BorderSizePixel=0; f.Parent=parent; local st=Instance.new('UIStroke',f); st.Color=Color3.new(0,0,0); st.Thickness=1; return f end
@@ -3946,6 +3963,10 @@ do
     CrossGroup:ColorPicker({Title='Color',Default=CrosshairColor,Callback=function(v) CrosshairColor=v end})
     CrossGroup:Button({Title='Spin Speed',Callback=function() v25('Spin Speed',0.1,2,CrosshairSpeed,0.1,function(v) CrosshairSpeed=v end,function() CrosshairSpeed=.8 end) end})
 
+    end)
+    if not _ok_Crosshair then warn('[CrystalHub] Visuals Crosshair failed: '..tostring(_err_Crosshair)) end
+
+    local _ok_RainSnow, _err_RainSnow = pcall(function()
     -- Rain / Snow
     local RainEnabled=false; local SnowEnabled=false; local RainColor=Color3.new(1,1,1); local SnowColor=Color3.new(1,1,1); local RainRate=1000; local SnowRate=100; local RainSpeed=100; local SnowSpeed=30; local RainPart; local SnowPart; local RainConn; local SnowConn
     u927 = function(kind)
@@ -3962,6 +3983,10 @@ do
     RainGroup:ColorPicker({Title='Snow Color',Default=SnowColor,Callback=function(v) SnowColor=v; if SnowEnabled then u927('snow') end end})
     RainGroup:Button({Title='Rain/Snow Amount & Speed',Callback=function() v25('Rain Amount',1,10000,RainRate,10,function(v) RainRate=v; if RainEnabled then u927('rain') end end,function() RainRate=1000 end); v25('Rain Speed',10,1000,RainSpeed,10,function(v) RainSpeed=v; if RainEnabled then u927('rain') end end,function() RainSpeed=100 end); v25('Snow Amount',1,1000,SnowRate,10,function(v) SnowRate=v; if SnowEnabled then u927('snow') end end,function() SnowRate=100 end); v25('Snow Speed',1,1000,SnowSpeed,10,function(v) SnowSpeed=v; if SnowEnabled then u927('snow') end end,function() SnowSpeed=30 end) end})
 
+    end)
+    if not _ok_RainSnow then warn('[CrystalHub] Visuals RainSnow failed: '..tostring(_err_RainSnow)) end
+
+    local _ok_World, _err_World = pcall(function()
     -- World / Lighting / Skybox
     local WorldOriginal={Ambient=Lighting.Ambient,Outdoor=Lighting.OutdoorAmbient,FogColor=Lighting.FogColor,FogStart=Lighting.FogStart,FogEnd=Lighting.FogEnd,Brightness=Lighting.Brightness,ClockTime=Lighting.ClockTime,GlobalShadows=Lighting.GlobalShadows}
     local WorldAmbient=WorldOriginal.Ambient; local WorldOutdoor=WorldOriginal.Outdoor; local WorldFog=WorldOriginal.FogColor; local WorldFogStart=WorldOriginal.FogStart; local WorldFogEnd=WorldOriginal.FogEnd; local WorldBrightness=WorldOriginal.Brightness; local WorldClock=WorldOriginal.ClockTime; local WorldSky
@@ -3981,12 +4006,19 @@ do
     WorldGroup:Dropdown({Title='Skybox',Options={'Roblox Default','Blue Space','Snow','Sunset'},Default='Roblox Default',Callback=function(v) u929(v) end})
     WorldGroup:Button({Title='Remove Custom Skybox',Callback=function() if WorldSky then WorldSky:Destroy(); WorldSky=nil end end})
 
+    end)
+    if not _ok_World then warn('[CrystalHub] Visuals World failed: '..tostring(_err_World)) end
+
+    local _ok_Stomp, _err_Stomp = pcall(function()
     -- Stomp Effects: use the source module when the host script provides it.
     local StompGroup=VisualsTab
     local StompOn=false; local StompEffect='Thanos'
     StompGroup:Toggle({Title='Stompeffects',Default=false,Callback=function(v) StompOn=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) end end})
     StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
-    end
+    end    end)
+    if not _ok_Stomp then warn('[CrystalHub] Visuals Stomp failed: '..tostring(_err_Stomp)) end
+
+
     local _visualsOk, _visualsErr = pcall(initVisuals)
     if not _visualsOk then
         warn('[CrystalHub] Visuals init failed: ' .. tostring(_visualsErr))
