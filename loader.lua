@@ -4749,9 +4749,9 @@ VisualsTab:Toggle({
 })
 
 VisualsTab:Dropdown({
-    Title   = 'Hat Style',
-    Options = {'Classic', 'Drawing'},
-    Default = 'Classic',
+    Title  = 'Hat Style',
+    Values = {'Classic', 'Drawing'},
+    Value  = 'Classic',
     Callback = function(v)
         Hat_ChangeStyle(v)
     end,
