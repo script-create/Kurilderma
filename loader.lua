@@ -1,4 +1,4 @@
-local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302, u971, u972, u973, u974, u975, u976, u977, u978, u979, u980, u981, u982, u983, u984, u985, u986, u987, u988, u989, u990, u991, u992, u993, u994
+local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302, u971, u972, u973, u974, u975, u976, u977, u978, u979, u980, u981, u982, u983, u984, u985, u986, u987, u988, u989, u990, u991, u992, u993, u994, u995, u996, u997, u998, u999, u1000, u1001
 
 do
     local u9, u10, u99, u105, u110, u116, u157
@@ -6067,6 +6067,347 @@ do
         VisualsTab:Button({Title='Restore World Lighting',Callback=function() for k,v in pairs(orig) do pcall(function() VisualLighting2[k]=v end) end; u994() end})
     end
 end
+
+
+    -- Additional Visuals copied from the supplied ZIP: Aura, Self Chams/Trail, Bullet Tracer and HUD Changer.
+    do
+        local AuraColors = {Safe = Color3.fromRGB(255,255,255)}
+        local ToggledAuras = {}
+u995 = function(character)
+    local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+    if not torso then return end
+    
+    -- Destroy old
+    for _, child in ipairs(torso:GetChildren()) do
+        if child.Name == "AuraSafe" then child:Destroy() end
+    end
+    
+    local container = Instance.new("Folder")
+    container.Name = "AuraSafe"
+    container.Parent = torso
+
+    local pointLight = Instance.new("PointLight")
+    pointLight.Range = 5
+    pointLight.Brightness = 3
+    pointLight.Color = AuraColors.Safe
+    pointLight.Enabled = true
+    pointLight.Shadows = false
+    pointLight.Parent = container
+
+    local glowAttach = Instance.new("Attachment")
+    glowAttach.Name = "Glow"
+    glowAttach.CFrame = CFrame.new(0, 0, 0)
+    glowAttach.Parent = container
+
+    local particleGlow = Instance.new("ParticleEmitter")
+    particleGlow.Acceleration = Vector3.new(0, 0, 0)
+    particleGlow.Brightness = 1
+    particleGlow.Color = ColorSequence.new(AuraColors.Safe)
+    particleGlow.Drag = 0
+    particleGlow.EmissionDirection = Enum.NormalId.Back
+    particleGlow.Enabled = true
+    particleGlow.FlipbookFramerate = NumberRange.new(1, 1)
+    particleGlow.FlipbookLayout = Enum.ParticleFlipbookLayout.None
+    particleGlow.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+    particleGlow.Lifetime = NumberRange.new(1, 1)
+    particleGlow.LightEmission = 1
+    particleGlow.LightInfluence = 1
+    particleGlow.LockedToPart = true
+    particleGlow.Orientation = Enum.ParticleOrientation.FacingCamera
+    particleGlow.Rate = 4
+    particleGlow.RotSpeed = NumberRange.new(0, 0)
+    particleGlow.Rotation = NumberRange.new(0, 0)
+    particleGlow.Shape = Enum.ParticleEmitterShape.Box
+    particleGlow.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+    particleGlow.ShapePartial = 1
+    particleGlow.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+    particleGlow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 4.25), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 3.375)})
+    particleGlow.Speed = NumberRange.new(0.001, 0.001)
+    particleGlow.SpreadAngle = Vector2.new(0, 0)
+    particleGlow.Squash = NumberSequence.new(0, 0)
+    particleGlow.Texture = "rbxassetid://1075864321"
+    particleGlow.TimeScale = 1
+    particleGlow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
+    particleGlow.VelocityInheritance = 0
+    particleGlow.WindAffectsDrag = false
+    particleGlow.ZOffset = -1
+    particleGlow.Parent = glowAttach
+
+    local attach2Upper = Instance.new("Attachment")
+    attach2Upper.Name = "2"
+    attach2Upper.CFrame = CFrame.new(0, 2.125, 0)
+    attach2Upper.Parent = container
+
+    local attach2Lower = Instance.new("Attachment")
+    attach2Lower.Name = "2"
+    attach2Lower.CFrame = CFrame.new(0, -3, 0)
+    attach2Lower.Parent = container
+
+    local beamSafe1 = Instance.new("Beam")
+    beamSafe1.Attachment0 = attach2Lower
+    beamSafe1.Attachment1 = attach2Upper
+    beamSafe1.Brightness = 1
+    beamSafe1.Color = ColorSequence.new(AuraColors.Safe)
+    beamSafe1.CurveSize0 = 0
+    beamSafe1.CurveSize1 = 0
+    beamSafe1.Enabled = true
+    beamSafe1.FaceCamera = true
+    beamSafe1.LightEmission = 1
+    beamSafe1.LightInfluence = 1
+    beamSafe1.Segments = 10
+    beamSafe1.Texture = "rbxassetid://7673945506"
+    beamSafe1.TextureLength = 0.3
+    beamSafe1.TextureMode = Enum.TextureMode.Stretch
+    beamSafe1.TextureSpeed = 2
+    beamSafe1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
+    beamSafe1.Width0 = 6
+    beamSafe1.Width1 = 6
+    beamSafe1.ZOffset = 1
+    beamSafe1.Parent = container
+
+    local beamSafe2 = Instance.new("Beam")
+    beamSafe2.Attachment0 = attach2Lower
+    beamSafe2.Attachment1 = attach2Upper
+    beamSafe2.Brightness = 1
+    beamSafe2.Color = ColorSequence.new(AuraColors.Safe)
+    beamSafe2.CurveSize0 = 0
+    beamSafe2.CurveSize1 = 0
+    beamSafe2.Enabled = true
+    beamSafe2.FaceCamera = true
+    beamSafe2.LightEmission = 1
+    beamSafe2.LightInfluence = 1
+    beamSafe2.Segments = 10
+    beamSafe2.Texture = "http://www.roblox.com/asset/?id=6045867277"
+    beamSafe2.TextureLength = 0.1
+    beamSafe2.TextureMode = Enum.TextureMode.Stretch
+    beamSafe2.TextureSpeed = 1
+    beamSafe2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
+    beamSafe2.Width0 = 5
+    beamSafe2.Width1 = 5
+    beamSafe2.ZOffset = 1
+    beamSafe2.Parent = container
+
+    local beamSafe3 = Instance.new("Beam")
+    beamSafe3.Attachment0 = attach2Lower
+    beamSafe3.Attachment1 = attach2Upper
+    beamSafe3.Brightness = 1
+    beamSafe3.Color = ColorSequence.new(AuraColors.Safe)
+    beamSafe3.CurveSize0 = 0
+    beamSafe3.CurveSize1 = 0
+    beamSafe3.Enabled = true
+    beamSafe3.FaceCamera = true
+    beamSafe3.LightEmission = 1
+    beamSafe3.LightInfluence = 1
+    beamSafe3.Segments = 10
+    beamSafe3.Texture = "rbxassetid://1849531275"
+    beamSafe3.TextureLength = 0.1
+    beamSafe3.TextureMode = Enum.TextureMode.Stretch
+    beamSafe3.TextureSpeed = 1
+    beamSafe3.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
+    beamSafe3.Width0 = 6
+    beamSafe3.Width1 = 6
+    beamSafe3.ZOffset = 1
+    beamSafe3.Parent = container
+
+    local topSymbolAttach = Instance.new("Attachment")
+    topSymbolAttach.Name = "1TopSymbol"
+    topSymbolAttach.CFrame = CFrame.new(0, 5.75001049, 1) * CFrame.fromMatrix(Vector3.zero, Vector3.new(0, 0, -1), Vector3.new(-1, 0, 0), Vector3.new(0, 1, 0))
+    topSymbolAttach.Parent = container
+
+    local bottomSymbolAttach = Instance.new("Attachment")
+    bottomSymbolAttach.Name = "1BottomSymbol"
+    bottomSymbolAttach.CFrame = CFrame.new(0, -1.24998808, 1) * CFrame.fromMatrix(Vector3.zero, Vector3.new(0, 0, -1), Vector3.new(-1, 0, 0), Vector3.new(0, 1, 0))
+    bottomSymbolAttach.Parent = container
+
+    local beamSymbol = Instance.new("Beam")
+    beamSymbol.Attachment0 = topSymbolAttach
+    beamSymbol.Attachment1 = bottomSymbolAttach
+    beamSymbol.Brightness = 1
+    beamSymbol.Color = ColorSequence.new(AuraColors.Safe)
+    beamSymbol.CurveSize0 = 0.5
+    beamSymbol.CurveSize1 = 0.5
+    beamSymbol.Enabled = true
+    beamSymbol.FaceCamera = false
+    beamSymbol.LightEmission = 1
+    beamSymbol.LightInfluence = 1
+    beamSymbol.Segments = 100
+    beamSymbol.Texture = "rbxassetid://8285797183"
+    beamSymbol.TextureLength = 1
+    beamSymbol.TextureMode = Enum.TextureMode.Stretch
+    beamSymbol.TextureSpeed = 0
+    beamSymbol.Transparency = NumberSequence.new(0, 0)
+    beamSymbol.Width0 = 7
+    beamSymbol.Width1 = 7
+    beamSymbol.ZOffset = 0
+    beamSymbol.Parent = container
+end
+
+u996 = function(character, auraName)
+    if not character then return end
+    if auraName == "Safe" then
+        u995(character)
+    end
+end
+
+
+u1000 = function(startPos, endPos)
+    if not BulletTracerSettings.Enabled or typeof(startPos) ~= "Vector3" or typeof(endPos) ~= "Vector3" then return end
+    local startPart=Instance.new("Part"); startPart.Name="CrystalHubBulletStart"; startPart.Anchored=true; startPart.CanCollide=false; startPart.CanTouch=false; startPart.CanQuery=false; startPart.Transparency=1; startPart.Size=Vector3.new(.2,.2,.2); startPart.Position=startPos; startPart.Parent=workspace
+    local endPart=startPart:Clone(); endPart.Name="CrystalHubBulletEnd"; endPart.Position=endPos; endPart.Parent=workspace
+    local beam=Instance.new("Beam")
+    beam.Attachment0=Instance.new("Attachment",startPart); beam.Attachment1=Instance.new("Attachment",endPart); beam.FaceCamera=true; beam.Color=ColorSequence.new(BulletTracerSettings.Color); beam.Texture=BulletTracerSettings.TextureID; beam.LightEmission=1; beam.Transparency=NumberSequence.new(BulletTracerSettings.Transparency); beam.Width0=BulletTracerSettings.Size; beam.Width1=BulletTracerSettings.Size; beam.Parent=startPart
+    task.delay(BulletTracerSettings.TimeAlive,function()
+        if beam and beam.Parent then
+            local tw=TweenService:Create(beam,TweenInfo.new(.3),{Width0=0,Width1=0}); tw:Play(); tw.Completed:Wait()
+        end
+        if startPart and startPart.Parent then startPart:Destroy() end
+        if endPart and endPart.Parent then endPart:Destroy() end
+    end)
+end
+
+u1001 = function()
+    local player=Players.LocalPlayer; local gui=player and player:FindFirstChild("PlayerGui"); local main=gui and gui:FindFirstChild("MainScreenGui"); local bar=main and main:FindFirstChild("Bar"); if not bar then return end
+    local function apply(name,enabled,text,color)
+        if not enabled then return end
+        local item=bar:FindFirstChild(name); if not item then return end
+        local label=item:FindFirstChild("TextLabel"); local b=item:FindFirstChild("bar"); if label then label.Text=text end; if b then b.BackgroundColor3=color end
+    end
+    apply("HP",HudCustomize.HP,HudCustomize.HPText,HudCustomize.HPColor)
+    apply("Armor",HudCustomize.Armor,HudCustomize.ArmorText,HudCustomize.ArmorColor)
+    apply("Energy",HudCustomize.Energy,HudCustomize.EnergyText,HudCustomize.EnergyColor)
+end
+
+        VisualsTab:Divider()
+        VisualsTab:Paragraph({Title='AuraGroup',Content='Safe aura from the supplied visual source.'})
+        VisualsTab:Toggle({Title='Safe Aura',Default=false,Callback=function(v)
+            ToggledAuras.Safe=v
+            if v then u996(Players.LocalPlayer.Character,'Safe') else
+                local c=Players.LocalPlayer.Character; local t=c and (c:FindFirstChild('UpperTorso') or c:FindFirstChild('Torso')); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end
+            end
+        end}):ColorPicker({Title='Aura Color',Default=AuraColors.Safe,Callback=function(v) AuraColors.Safe=v; if ToggledAuras.Safe then u996(Players.LocalPlayer.Character,'Safe') end end})
+
+        local VisualCharacterChams={Enabled=false,Color=Color3.fromRGB(255,255,255),Material=Enum.Material.ForceField}
+        local VisualWeaponChams={Enabled=false,Color=Color3.fromRGB(255,255,255),Material=Enum.Material.Neon}
+        local VisualTrailColor=Color3.fromRGB(255,255,255)
+        local VisualTrailLifetime=1.6
+u997 = function(character)
+    if not character then return end
+    if VisualCharacterChams.Enabled then
+        for _, v in pairs(character:GetDescendants()) do
+            if v:IsA("MeshPart") or v:IsA("BasePart") then
+                if not (v.Parent and v.Parent:IsA("Tool")) then
+                    v.Material = VisualCharacterChams.Material
+                    v.Color = VisualCharacterChams.Color
+                    if v:IsA("MeshPart") then v.TextureID = "" end
+                end
+            end
+        end
+    end
+    if VisualWeaponChams.Enabled then
+        local gun = character:FindFirstChildOfClass("Tool")
+        if gun then
+            for _, v in pairs(gun:GetDescendants()) do
+                if v:IsA("MeshPart") or v:IsA("BasePart") then
+                    v.Material = VisualWeaponChams.Material
+                    v.Color = VisualWeaponChams.Color
+                    if v:IsA("MeshPart") then v.TextureID = "" end
+                end
+            end
+        end
+    end
+end
+
+u998 = function(character)
+    if not character then return end
+    task.wait(2)
+    u997(character)
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") then u997(character) end
+    end)
+end
+
+u999 = function(state)
+    local character = Players.LocalPlayer.Character
+    if not character then return end
+    for _, v in pairs(character:GetChildren()) do
+        if v:IsA("BasePart") then
+            if state then
+                if not v:FindFirstChild("CrystalHubTrail") then
+                    local trail = Instance.new("Trail")
+                    trail.Name = "CrystalHubTrail"
+                    trail.Texture = "rbxassetid://1390780157"
+                    local a0 = Instance.new("Attachment", v)
+                    a0.Name = "CrystalHubTrailA0"
+                    local root = character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        local a1 = Instance.new("Attachment", root)
+                        a1.Name = "CrystalHubTrailA1"
+                        trail.Attachment0 = a0
+                        trail.Attachment1 = a1
+                    end
+                    trail.Color = ColorSequence.new(VisualTrailColor)
+                    trail.Lifetime = VisualTrailLifetime
+                    trail.Parent = v
+                end
+            else
+                for _, child in ipairs(v:GetChildren()) do
+                    if child:IsA("Trail") and child.Name == "CrystalHubTrail" then child:Destroy() end
+                    if child.Name == "CrystalHubTrailA0" then child:Destroy() end
+                end
+            end
+        end
+    end
+end
+
+        VisualsTab:Paragraph({Title='Self',Content='Character chams, weapon chams and trail.'})
+        VisualsTab:Toggle({Title='Weapon Chams',Default=false,Callback=function(v) VisualWeaponChams.Enabled=v; u997(Players.LocalPlayer.Character) end}):ColorPicker({Title='Weapon Color',Default=VisualWeaponChams.Color,Callback=function(v) VisualWeaponChams.Color=v; u997(Players.LocalPlayer.Character) end})
+        VisualsTab:Dropdown({Title='Weapon Cham Type',Values={'Neon','ForceField'},Default='Neon',Callback=function(v) VisualWeaponChams.Material=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u997(Players.LocalPlayer.Character) end})
+        VisualsTab:Toggle({Title='Client Chams',Default=false,Callback=function(v) VisualCharacterChams.Enabled=v; u997(Players.LocalPlayer.Character) end}):ColorPicker({Title='Client Color',Default=VisualCharacterChams.Color,Callback=function(v) VisualCharacterChams.Color=v; u997(Players.LocalPlayer.Character) end})
+        VisualsTab:Dropdown({Title='Client Cham Type',Values={'Force Field','Neon'},Default='Force Field',Callback=function(v) VisualCharacterChams.Material=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u997(Players.LocalPlayer.Character) end})
+        VisualsTab:Toggle({Title='Trail',Default=false,Callback=function(v) u999(v) end}):ColorPicker({Title='Trail Color',Default=VisualTrailColor,Callback=function(v) VisualTrailColor=v; u999(false); u999(true) end})
+        VisualsTab:Slider({Title='Trail Lifetime',Step=.1,Value={Min=.1,Max=5,Default=1.6},Callback=function(v) VisualTrailLifetime=tonumber(v) or 1.6; u999(false); u999(true) end})
+
+        local BulletTracerSettings={Enabled=false,TextureID='rbxassetid://12781852245',Color=Color3.fromRGB(255,255,255),Size=.4,Transparency=0,TimeAlive=3}
+        VisualsTab:Paragraph({Title='BulletTracer',Content='Bullet tracer settings from the supplied visual source.'})
+        VisualsTab:Toggle({Title='Bullet Tracers',Default=false,Callback=function(v) BulletTracerSettings.Enabled=v end}):ColorPicker({Title='Color',Default=BulletTracerSettings.Color,Callback=function(v) BulletTracerSettings.Color=v end})
+        VisualsTab:Dropdown({Title='Texture',Values={'Beam','Lightning','Heartrate','Chain','Glitch','Swirl'},Default='Beam',Callback=function(v) local ids={Beam='12781852245',Lightning='446111271',Heartrate='5830549480',Chain='9632168658',Glitch='8089467613',Swirl='5638168605'}; BulletTracerSettings.TextureID='rbxassetid://'..ids[v] end})
+        VisualsTab:Slider({Title='Size',Step=.1,Value={Min=.1,Max=3,Default=.4},Callback=function(v) BulletTracerSettings.Size=tonumber(v) or .4 end})
+        VisualsTab:Slider({Title='Transparency',Step=.05,Value={Min=0,Max=1,Default=0},Callback=function(v) BulletTracerSettings.Transparency=tonumber(v) or 0 end})
+        VisualsTab:Slider({Title='Time Alive',Step=1,Value={Min=1,Max=10,Default=3},Callback=function(v) BulletTracerSettings.TimeAlive=tonumber(v) or 3 end})
+
+        local HudCustomize={HP=false,Armor=false,Energy=false,HPText=' Health ',ArmorText='                   Armor',EnergyText='Dark Energy              ',HPColor=Color3.new(.941176,.031373,.819608),ArmorColor=Color3.new(.376471,.031373,.933333),EnergyColor=Color3.new(.768627,.039216,.952941)}
+        VisualsTab:Paragraph({Title='Hud Changer',Content='Customize the Health, Armor and Energy bars.'})
+        VisualsTab:Toggle({Title='Customize Health',Default=false,Callback=function(v) HudCustomize.HP=v; u1001() end}):ColorPicker({Title='Health Color',Default=HudCustomize.HPColor,Callback=function(v) HudCustomize.HPColor=v; u1001() end})
+        VisualsTab:Input({Title='Health Text',Default=HudCustomize.HPText,Callback=function(v) HudCustomize.HPText=v; u1001() end})
+        VisualsTab:Toggle({Title='Customize Armor',Default=false,Callback=function(v) HudCustomize.Armor=v; u1001() end}):ColorPicker({Title='Armor Color',Default=HudCustomize.ArmorColor,Callback=function(v) HudCustomize.ArmorColor=v; u1001() end})
+        VisualsTab:Input({Title='Armor Text',Default=HudCustomize.ArmorText,Callback=function(v) HudCustomize.ArmorText=v; u1001() end})
+        VisualsTab:Toggle({Title='Customize Energy',Default=false,Callback=function(v) HudCustomize.Energy=v; u1001() end}):ColorPicker({Title='Energy Color',Default=HudCustomize.EnergyColor,Callback=function(v) HudCustomize.EnergyColor=v; u1001() end})
+        VisualsTab:Input({Title='Energy Text',Default=HudCustomize.EnergyText,Callback=function(v) HudCustomize.EnergyText=v; u1001() end})
+
+        Players.LocalPlayer.CharacterAdded:Connect(function(c)
+            task.wait(2)
+            if ToggledAuras.Safe then u996(c,'Safe') end
+            u998(c)
+            if HudCustomize.HP or HudCustomize.Armor or HudCustomize.Energy then u1001() end
+        end)
+        if Players.LocalPlayer.Character then u998(Players.LocalPlayer.Character) end
+
+        if getnamecallmethod and getrawmetatable and MainEvent then
+            local mt=getrawmetatable(MainEvent)
+            if mt then
+                pcall(function()
+                    local old=mt.__namecall
+                    setreadonly(mt,false)
+                    mt.__namecall=function(self,...)
+                        local args={...}
+                        if self==MainEvent and getnamecallmethod()=='FireServer' and args[1]=='ShootGun' and BulletTracerSettings.Enabled then u1000(args[3],args[4]) end
+                        return old(self,unpack(args))
+                    end
+                    setreadonly(mt,true)
+                end)
+            end
+        end
+    end
 
 task.wait(0.4)
 v232(true)
