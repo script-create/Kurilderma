@@ -3768,9 +3768,9 @@ do
         end)
     end
 
-    local Lighting = game:GetService('Lighting')
     -- Visuals tab: functions ported from the Visual section of the source.
-    local Lighting = game:GetService('Lighting')
+    local function initVisuals()
+        local Lighting = game:GetService('Lighting')
     local VisualsTab = v300:Tab({
         Title = 'Visuals',
         Icon = 'eye',
@@ -3995,6 +3995,8 @@ do
     StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
 
     VisualsTab:Paragraph({Title='Visuals',Content='Visual functions ported from the ZIP. ESP-specific controls stay in the ESP tab.'})
+    end
+    initVisuals()
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
