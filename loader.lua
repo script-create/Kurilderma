@@ -3907,51 +3907,6 @@ do
             })
         end
 
-        -- Color (R G B sliders)
-        VisualsTab:Paragraph({
-            Title = "Aura Color",
-            Content = "Adjust RGB to change the color tint of all active auras.",
-        })
-
-        VisualsTab:Slider({
-            Title = "Red",
-            Description = "Red channel (0-255)",
-            Default = 133,
-            Min = 0,
-            Max = 255,
-            Rounding = 0,
-            Callback = function(val)
-                aura_color = Color3.fromRGB(val, aura_color.G*255, aura_color.B*255)
-                applyAura()
-            end,
-        })
-
-        VisualsTab:Slider({
-            Title = "Green",
-            Description = "Green channel (0-255)",
-            Default = 220,
-            Min = 0,
-            Max = 255,
-            Rounding = 0,
-            Callback = function(val)
-                aura_color = Color3.fromRGB(aura_color.R*255, val, aura_color.B*255)
-                applyAura()
-            end,
-        })
-
-        VisualsTab:Slider({
-            Title = "Blue",
-            Description = "Blue channel (0-255)",
-            Default = 255,
-            Min = 0,
-            Max = 255,
-            Rounding = 0,
-            Callback = function(val)
-                aura_color = Color3.fromRGB(aura_color.R*255, aura_color.G*255, val)
-                applyAura()
-            end,
-        })
-
         -- Quick presets
         VisualsTab:Paragraph({
             Title = "Color Presets",
