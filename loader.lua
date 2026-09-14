@@ -3862,7 +3862,6 @@ do
         if auraName == 'Safe' and AuraEnabled then u914(character) end
     end
     Players.LocalPlayer.CharacterAdded:Connect(function(c) task.wait(0.5); u915(c,'Safe') end)
-    VisualsTab:Paragraph({Title='AuraGroup', Content=''})
     local AuraGroup=VisualsTab
     AuraGroup:Toggle({Title='Safe',Default=false,Callback=function(v) AuraEnabled=v; local c=Players.LocalPlayer.Character; if v and c then u914(c) elseif c then local t=c:FindFirstChild('UpperTorso') or c:FindFirstChild('Torso'); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end end end})
     AuraGroup:ColorPicker({Title='Aura Color',Default=AuraColor,Callback=function(v) AuraColor=v; if AuraEnabled and Players.LocalPlayer.Character then u914(Players.LocalPlayer.Character) end end})
@@ -3893,7 +3892,6 @@ do
     end
     Players.LocalPlayer.CharacterAdded:Connect(u917)
     if Players.LocalPlayer.Character then task.spawn(u917,Players.LocalPlayer.Character) end
-    VisualsTab:Paragraph({Title='Self', Content=''})
     local SelfGroup=VisualsTab
     SelfGroup:Toggle({Title='Character Chams',Default=false,Callback=function(v) CharChams=v; u916(Players.LocalPlayer.Character) end})
     SelfGroup:ColorPicker({Title='Character Color',Default=CharColor,Callback=function(v) CharColor=v; u916(Players.LocalPlayer.Character) end})
@@ -3914,7 +3912,6 @@ do
         local beam=Instance.new('Beam'); beam.Attachment0=a0; beam.Attachment1=a1; beam.Texture=BulletTracerTexture; beam.Color=ColorSequence.new(BulletTracerColor); beam.Width0=BulletTracerSize; beam.Width1=BulletTracerSize; beam.Transparency=NumberSequence.new(BulletTracerTransparency); beam.FaceCamera=true; beam.Parent=p0
         task.delay(BulletTracerLife,function() if p0 then p0:Destroy() end; if p1 then p1:Destroy() end end)
     end
-    VisualsTab:Paragraph({Title='BulletTracer', Content=''})
     local BulletGroup=VisualsTab
     BulletGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) BulletTracerEnabled=v end})
     BulletGroup:ColorPicker({Title='Color',Default=BulletTracerColor,Callback=function(v) BulletTracerColor=v end})
@@ -3928,7 +3925,6 @@ do
         local function apply(name,on,color) local g=bar:FindFirstChild(name); if on and g then local t=g:FindFirstChild('TextLabel'); local b=g:FindFirstChild('bar'); if t then t.Text=name end; if b and b:IsA('GuiObject') then b.BackgroundColor3=color end end end
         apply('HP',HudHP,HudHPColor); apply('Armor',HudArmor,HudArmorColor); apply('Energy',HudEnergy,HudEnergyColor)
     end
-    VisualsTab:Paragraph({Title='Hud Changer', Content=''})
     local HudGroup=VisualsTab
     HudGroup:Toggle({Title='Customize Health',Default=false,Callback=function(v) HudHP=v; u920() end}); HudGroup:ColorPicker({Title='Health Color',Default=HudHPColor,Callback=function(v) HudHPColor=v; u920() end})
     HudGroup:Toggle({Title='Customize Armor',Default=false,Callback=function(v) HudArmor=v; u920() end}); HudGroup:ColorPicker({Title='Armor Color',Default=HudArmorColor,Callback=function(v) HudArmorColor=v; u920() end})
@@ -3943,7 +3939,6 @@ do
     u925 = function() if CrosshairEnabled then u924() else u923() end end
     u926 = function() if not CrosshairContainer then return end; local m=Players.LocalPlayer:GetMouse(); CrosshairContainer.Position=UDim2.new(0,m.X,0,m.Y); if CrosshairLabel then CrosshairLabel.Position=UDim2.new(0,m.X-70,0,m.Y+50); CrosshairLabel.Visible=CrosshairText end; local c=CrosshairRainbow and Color3.fromHSV((tick()%5)/5,1,1) or CrosshairColor; for _,f in pairs(CrosshairLines) do f.BackgroundColor3=c end end
     RunService.RenderStepped:Connect(u926)
-    VisualsTab:Paragraph({Title='Crosshair', Content=''})
     local CrossGroup=VisualsTab
     CrossGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) CrosshairEnabled=v; u925() end})
     CrossGroup:Toggle({Title='Text',Default=true,Callback=function(v) CrosshairText=v end})
@@ -3960,7 +3955,6 @@ do
         if kind=='rain' then RainPart=part else SnowPart=part end
     end
     u928 = function() if RainConn then RainConn:Disconnect(); RainConn=nil end; if SnowConn then SnowConn:Disconnect(); SnowConn=nil end; if RainPart then RainPart:Destroy(); RainPart=nil end; if SnowPart then SnowPart:Destroy(); SnowPart=nil end end
-    VisualsTab:Paragraph({Title='Rain / Snow', Content=''})
     local RainGroup=VisualsTab
     RainGroup:Toggle({Title='Rain Enabled',Default=false,Callback=function(v) RainEnabled=v; if RainConn then RainConn:Disconnect(); RainConn=nil end; if v then u927('rain'); RainConn=RunService.Heartbeat:Connect(function() if RainPart and CurrentCamera then RainPart.CFrame=CFrame.new(CurrentCamera.CFrame.Position+Vector3.new(0,30,0)) end end) elseif RainPart then RainPart:Destroy(); RainPart=nil end end})
     RainGroup:ColorPicker({Title='Rain Color',Default=RainColor,Callback=function(v) RainColor=v; if RainEnabled then u927('rain') end end})
@@ -3977,7 +3971,6 @@ do
         local ids={['Blue Space']={'rbxassetid://159454299','rbxassetid://159454296','rbxassetid://159454293','rbxassetid://159454286','rbxassetid://159454300','rbxassetid://159454288'},['Snow']={'rbxassetid://160174370','rbxassetid://160174371','rbxassetid://160174372','rbxassetid://160174373','rbxassetid://160174374','rbxassetid://160174375'},['Sunset']={'rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758'}}
         local x=ids[name] or ids['Blue Space']; WorldSky=Instance.new('Sky'); WorldSky.Name='CrystalHubCustomSky'; WorldSky.SkyboxBk=x[1]; WorldSky.SkyboxDn=x[2]; WorldSky.SkyboxFt=x[3]; WorldSky.SkyboxLf=x[4]; WorldSky.SkyboxRt=x[5]; WorldSky.SkyboxUp=x[6]; WorldSky.Parent=Lighting
     end
-    VisualsTab:Paragraph({Title='World', Content=''})
     local WorldGroup=VisualsTab
     WorldGroup:Toggle({Title='Custom Ambient',Default=false,Callback=function(v) Lighting.Ambient=v and WorldAmbient or WorldOriginal.Ambient end}); WorldGroup:ColorPicker({Title='Ambient Color',Default=WorldAmbient,Callback=function(v) WorldAmbient=v end})
     WorldGroup:Toggle({Title='Custom Outdoor Ambient',Default=false,Callback=function(v) Lighting.OutdoorAmbient=v and WorldOutdoor or WorldOriginal.Outdoor end}); WorldGroup:ColorPicker({Title='Outdoor Color',Default=WorldOutdoor,Callback=function(v) WorldOutdoor=v end})
@@ -3989,13 +3982,10 @@ do
     WorldGroup:Button({Title='Remove Custom Skybox',Callback=function() if WorldSky then WorldSky:Destroy(); WorldSky=nil end end})
 
     -- Stomp Effects: use the source module when the host script provides it.
-    VisualsTab:Paragraph({Title='StompEffects', Content=''})
     local StompGroup=VisualsTab
     local StompOn=false; local StompEffect='Thanos'
     StompGroup:Toggle({Title='Stompeffects',Default=false,Callback=function(v) StompOn=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) end end})
     StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
-
-    VisualsTab:Paragraph({Title='Visuals',Content='Visual functions ported from the ZIP. ESP-specific controls stay in the ESP tab.'})
     end
     local _visualsOk, _visualsErr = pcall(initVisuals)
     if not _visualsOk then
