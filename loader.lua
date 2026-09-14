@@ -4015,7 +4015,8 @@ do
     local StompOn=false; local StompEffect='Thanos'
     StompGroup:Toggle({Title='Stompeffects',Default=false,Callback=function(v) StompOn=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) end end})
     StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
-    end    end)
+    end)
+    end
     if not _ok_Stomp then warn('[CrystalHub] Visuals Stomp failed: '..tostring(_err_Stomp)) end
 
 
