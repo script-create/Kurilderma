@@ -3771,6 +3771,7 @@ do
     -- Visuals tab: functions ported from the Visual section of the source.
     local function initVisuals()
         local Lighting = game:GetService('Lighting')
+        local RunService = game:GetService('RunService')
     local VisualsTab = v300:Tab({
         Title = 'Visuals',
         Icon = 'eye',
@@ -3996,7 +3997,10 @@ do
 
     VisualsTab:Paragraph({Title='Visuals',Content='Visual functions ported from the ZIP. ESP-specific controls stay in the ESP tab.'})
     end
-    initVisuals()
+    local _visualsOk, _visualsErr = pcall(initVisuals)
+    if not _visualsOk then
+        warn('[CrystalHub] Visuals init failed: ' .. tostring(_visualsErr))
+    end
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
