@@ -3774,18 +3774,12 @@ do
         Icon = 'eye',
     })
 
-    VisualsTab:Paragraph({
-        Title = 'Aura Viewer',
-        Content = 'Select auras, adjust color and toggle them on your character.',
-    })
-
     -- ============================================================
-    --  AURA SYSTEM
+    --  AURA SYSTEM (WindUI native)
     -- ============================================================
     do
-        local _player = game:GetService("Players").LocalPlayer
-        local _uis    = game:GetService("UserInputService")
-        local _tween  = game:GetService("TweenService")
+        local _player  = game:GetService("Players").LocalPlayer
+        local _uis     = game:GetService("UserInputService")
 
         local aura_ids = {
             angel     = "97658130917593",
@@ -3803,159 +3797,10 @@ do
         local aura_particles = {}
         local aura_color     = Color3.fromRGB(133, 220, 255)
         local aura_active    = false
-        local colorValues    = {R = 133, G = 220, B = 255}
-
         local selected_auras = {}
         for _, name in ipairs(aura_order) do selected_auras[name] = false end
 
-        -- ── GUI ────────────────────────────────────────────────
-        local ScreenGui = Instance.new("ScreenGui")
-        ScreenGui.Name          = "AuraViewer"
-        ScreenGui.ResetOnSpawn  = false
-        ScreenGui.Parent        = _player:WaitForChild("PlayerGui")
-
-        -- Toggle button
-        local ToggleBtn = Instance.new("TextButton")
-        ToggleBtn.Size                 = UDim2.new(0, 55, 0, 55)
-        ToggleBtn.Position             = UDim2.new(0.02, 0, 0.88, 0)
-        ToggleBtn.BackgroundColor3     = Color3.fromRGB(0, 0, 0)
-        ToggleBtn.BackgroundTransparency = 0.3
-        ToggleBtn.BorderSizePixel      = 1
-        ToggleBtn.BorderColor3         = Color3.fromRGB(80, 80, 80)
-        ToggleBtn.Text                 = "A"
-        ToggleBtn.TextColor3           = Color3.fromRGB(255, 255, 255)
-        ToggleBtn.TextSize             = 24
-        ToggleBtn.Font                 = Enum.Font.GothamBold
-        ToggleBtn.AutoButtonColor      = false
-        ToggleBtn.ZIndex               = 10
-        ToggleBtn.Parent               = ScreenGui
-        Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 18)
-
-        -- drag for toggle button
-        local btnDragging, btnDragStart, btnStartPos = false, nil, nil
-        ToggleBtn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                btnDragging = true; btnDragStart = input.Position; btnStartPos = ToggleBtn.Position
-            end
-        end)
-        _uis.InputChanged:Connect(function(input)
-            if btnDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local d = input.Position - btnDragStart
-                local cam = workspace.CurrentCamera
-                local nx, ny = btnStartPos.X.Offset + d.X, btnStartPos.Y.Offset + d.Y
-                if cam then
-                    local s = cam.ViewportSize; local b = ToggleBtn.AbsoluteSize
-                    nx = math.clamp(nx, 0, s.X - b.X); ny = math.clamp(ny, 0, s.Y - b.Y)
-                end
-                ToggleBtn.Position = UDim2.new(0, nx, 0, ny)
-            end
-        end)
-        _uis.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                btnDragging = false; btnDragStart = nil
-            end
-        end)
-        ToggleBtn.MouseEnter:Connect(function()
-            _tween:Create(ToggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0,60,0,60)}):Play()
-            ToggleBtn.BackgroundTransparency = 0.1
-        end)
-        ToggleBtn.MouseLeave:Connect(function()
-            _tween:Create(ToggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0,55,0,55)}):Play()
-            ToggleBtn.BackgroundTransparency = 0.3
-        end)
-
-        -- Menu
-        local Menu = Instance.new("Frame")
-        Menu.Size                   = UDim2.new(0, 280, 0, 350)
-        Menu.Position               = UDim2.new(0.5, -140, 0.5, -175)
-        Menu.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
-        Menu.BackgroundTransparency = 0.5
-        Menu.BorderSizePixel        = 1
-        Menu.BorderColor3           = Color3.fromRGB(60, 60, 60)
-        Menu.ClipsDescendants       = true
-        Menu.Visible                = false
-        Menu.Parent                 = ScreenGui
-        Instance.new("UICorner", Menu).CornerRadius = UDim.new(0, 16)
-
-        -- drag menu
-        local menuDragging, menuDragStart, menuStartPos = false, nil, nil
-        Menu.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                local pos = input.Position; local mp = Menu.AbsolutePosition
-                if pos.X >= mp.X and pos.X <= mp.X+280 and pos.Y >= mp.Y and pos.Y <= mp.Y+35 then
-                    menuDragging = true; menuDragStart = pos; menuStartPos = Menu.Position
-                end
-            end
-        end)
-        _uis.InputChanged:Connect(function(input)
-            if menuDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local d = input.Position - menuDragStart
-                Menu.Position = UDim2.new(0, menuStartPos.X.Offset+d.X, 0, menuStartPos.Y.Offset+d.Y)
-            end
-        end)
-        _uis.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                menuDragging = false; menuDragStart = nil
-            end
-        end)
-
-        -- Header
-        local Header = Instance.new("Frame")
-        Header.Size = UDim2.new(1,0,0,35); Header.BackgroundTransparency = 1; Header.Parent = Menu
-        local Title = Instance.new("TextLabel")
-        Title.Size = UDim2.new(1,-40,1,0); Title.Position = UDim2.new(0,20,0,0)
-        Title.BackgroundTransparency = 1; Title.Text = "AURA SELECTOR"
-        Title.TextColor3 = Color3.fromRGB(255,255,255); Title.TextSize = 14
-        Title.Font = Enum.Font.GothamBold; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Header
-
-        local CloseBtn = Instance.new("TextButton")
-        CloseBtn.Size = UDim2.new(0,26,0,26); CloseBtn.Position = UDim2.new(1,-33,0.5,-13)
-        CloseBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); CloseBtn.BackgroundTransparency = 0.3
-        CloseBtn.BorderSizePixel = 1; CloseBtn.BorderColor3 = Color3.fromRGB(80,80,80)
-        CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.Text = "X"
-        CloseBtn.TextColor3 = Color3.fromRGB(255,255,255); CloseBtn.TextSize = 14; CloseBtn.Parent = Header
-        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
-
-        local StatusLabel = Instance.new("TextLabel")
-        StatusLabel.Size = UDim2.new(0,100,0,20); StatusLabel.Position = UDim2.new(0,8,0,38)
-        StatusLabel.BackgroundTransparency = 1; StatusLabel.Text = "Selected: 0/8"
-        StatusLabel.TextColor3 = Color3.fromRGB(180,180,180); StatusLabel.TextSize = 10
-        StatusLabel.Font = Enum.Font.GothamMedium; StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-        StatusLabel.Parent = Menu
-
-        local AllBtn = Instance.new("TextButton")
-        AllBtn.Size = UDim2.new(0,65,0,22); AllBtn.Position = UDim2.new(1,-75,0,38)
-        AllBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); AllBtn.BackgroundTransparency = 0.3
-        AllBtn.BorderSizePixel = 1; AllBtn.BorderColor3 = Color3.fromRGB(80,80,80)
-        AllBtn.Text = "ALL"; AllBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        AllBtn.TextSize = 10; AllBtn.Font = Enum.Font.GothamBold; AllBtn.Parent = Menu
-        Instance.new("UICorner", AllBtn).CornerRadius = UDim.new(0, 4)
-
-        -- ScrollFrame
-        local ScrollFrame = Instance.new("ScrollingFrame")
-        ScrollFrame.Size = UDim2.new(1,-16,0,160); ScrollFrame.Position = UDim2.new(0,8,0,65)
-        ScrollFrame.BackgroundTransparency = 1; ScrollFrame.BorderSizePixel = 0
-        ScrollFrame.ScrollBarThickness = 3; ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(80,80,80)
-        ScrollFrame.CanvasSize = UDim2.new(0,0,0,0); ScrollFrame.Parent = Menu
-
-        local ItemsContainer = Instance.new("Frame")
-        ItemsContainer.Size = UDim2.new(1,0,0,0); ItemsContainer.BackgroundTransparency = 1
-        ItemsContainer.Parent = ScrollFrame
-
-        -- Color panel
-        local ColorPanel = Instance.new("Frame")
-        ColorPanel.Size = UDim2.new(1,-16,0,55); ColorPanel.Position = UDim2.new(0,8,1,-62)
-        ColorPanel.BackgroundColor3 = Color3.fromRGB(0,0,0); ColorPanel.BackgroundTransparency = 0.4
-        ColorPanel.BorderSizePixel = 1; ColorPanel.BorderColor3 = Color3.fromRGB(60,60,60); ColorPanel.Parent = Menu
-        Instance.new("UICorner", ColorPanel).CornerRadius = UDim.new(0, 6)
-
-        local ColorLabel = Instance.new("TextLabel")
-        ColorLabel.Size = UDim2.new(1,0,0,14); ColorLabel.BackgroundTransparency = 1
-        ColorLabel.Text = "COLOR"; ColorLabel.TextColor3 = Color3.fromRGB(180,180,180)
-        ColorLabel.TextSize = 9; ColorLabel.Font = Enum.Font.GothamBold
-        ColorLabel.TextXAlignment = Enum.TextXAlignment.Center; ColorLabel.Parent = ColorPanel
-
-        -- ── Core aura helpers ──────────────────────────────────
+        -- ── Core helpers ──────────────────────────────────────
         local function clearAura()
             for _, p in ipairs(aura_particles) do pcall(function() p:Destroy() end) end
             aura_particles = {}
@@ -3978,6 +3823,7 @@ do
 
         local function applyAura()
             clearAura()
+            if not aura_active then return end
             local char = _player.Character; if not char then return end
             local real_char = char
             if char.Parent ~= workspace then
@@ -3990,10 +3836,8 @@ do
                 end
             end
             if not real_char then return end
-            local count = 0
             for _, name in ipairs(aura_order) do
                 if selected_auras[name] then
-                    count = count + 1
                     local m = loadAura(name)
                     if m then
                         colorAura(m, aura_color)
@@ -4010,162 +3854,153 @@ do
                     end
                 end
             end
-            StatusLabel.Text = "Selected: "..count.."/8"
         end
-
-        local function updateAuraColor()
-            aura_color = Color3.fromRGB(colorValues.R, colorValues.G, colorValues.B)
-            if aura_active then applyAura() end
-        end
-
-        -- Color sliders
-        local function createColorSlider(parent, yPos, colorName, defaultVal)
-            local frame = Instance.new("Frame")
-            frame.Size = UDim2.new(1,-6,0,14); frame.Position = UDim2.new(0,3,0,yPos)
-            frame.BackgroundTransparency = 1; frame.Parent = parent
-
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0,12,1,0); label.BackgroundTransparency = 1
-            label.Text = colorName; label.TextColor3 = Color3.fromRGB(255,255,255)
-            label.TextSize = 8; label.Font = Enum.Font.GothamBold; label.Parent = frame
-
-            local bg = Instance.new("Frame")
-            bg.Size = UDim2.new(1,-45,1,0); bg.Position = UDim2.new(0,14,0,0)
-            bg.BackgroundColor3 = Color3.fromRGB(40,40,40); bg.BorderSizePixel = 0; bg.Parent = frame
-            Instance.new("UICorner", bg).CornerRadius = UDim.new(1,0)
-
-            local fill = Instance.new("Frame")
-            fill.Size = UDim2.new(defaultVal/255,0,1,0)
-            fill.BackgroundColor3 = colorName=="R" and Color3.fromRGB(255,80,80) or colorName=="G" and Color3.fromRGB(80,255,80) or Color3.fromRGB(80,80,255)
-            fill.BorderSizePixel = 0; fill.Parent = bg
-            Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
-
-            local valLbl = Instance.new("TextLabel")
-            valLbl.Size = UDim2.new(0,26,1,0); valLbl.Position = UDim2.new(1,-28,0,0)
-            valLbl.BackgroundTransparency = 1; valLbl.Text = tostring(defaultVal)
-            valLbl.TextColor3 = Color3.fromRGB(200,200,200); valLbl.TextSize = 8
-            valLbl.Font = Enum.Font.Gotham; valLbl.Parent = frame
-
-            local function updateSlider(mouseX)
-                local ax, aw = bg.AbsolutePosition.X, bg.AbsoluteSize.X
-                if aw <= 0 then return end
-                local x = math.clamp((mouseX-ax)/aw, 0, 1)
-                colorValues[colorName] = math.round(x*255)
-                fill.Size = UDim2.new(x,0,1,0)
-                valLbl.Text = tostring(colorValues[colorName])
-                updateAuraColor()
-            end
-
-            bg.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    updateSlider(input.Position.X)
-                    local conn
-                    conn = _uis.InputChanged:Connect(function(i)
-                        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
-                            updateSlider(i.Position.X)
-                        end
-                    end)
-                    input.Changed:Connect(function()
-                        if input.UserInputState == Enum.UserInputState.End then conn:Disconnect() end
-                    end)
-                end
-            end)
-        end
-
-        createColorSlider(ColorPanel, 14, "R", 133)
-        createColorSlider(ColorPanel, 29, "G", 220)
-        createColorSlider(ColorPanel, 44, "B", 255)
-
-        -- Aura buttons
-        local auraButtons = {}
-        local function createAuraButton(aura_name, index)
-            local row = Instance.new("Frame")
-            row.Size = UDim2.new(1,0,0,28); row.Position = UDim2.new(0,0,0,index*31)
-            row.BackgroundTransparency = 1; row.Parent = ItemsContainer
-
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1,-35,1,0); btn.Position = UDim2.new(0,0,0,0)
-            btn.BackgroundColor3 = Color3.fromRGB(20,20,20); btn.BackgroundTransparency = 0.3
-            btn.BorderSizePixel = 1; btn.BorderColor3 = Color3.fromRGB(60,60,60)
-            btn.Text = aura_name:upper(); btn.TextColor3 = Color3.fromRGB(200,200,200)
-            btn.TextSize = 10; btn.Font = Enum.Font.GothamMedium
-            btn.TextXAlignment = Enum.TextXAlignment.Left; btn.Parent = row
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-            local checkbox = Instance.new("TextButton")
-            checkbox.Size = UDim2.new(0,20,0,20); checkbox.Position = UDim2.new(1,-26,0.5,-10)
-            checkbox.BackgroundColor3 = Color3.fromRGB(30,30,30); checkbox.BackgroundTransparency = 0.3
-            checkbox.BorderSizePixel = 1; checkbox.BorderColor3 = Color3.fromRGB(70,70,70)
-            checkbox.Text = ""; checkbox.TextColor3 = Color3.fromRGB(255,255,255)
-            checkbox.TextSize = 12; checkbox.Font = Enum.Font.GothamBold; checkbox.Parent = row
-            Instance.new("UICorner", checkbox).CornerRadius = UDim.new(0,4)
-
-            local function updateCheckbox()
-                if selected_auras[aura_name] then
-                    checkbox.BackgroundColor3 = Color3.fromRGB(80,180,80); checkbox.BackgroundTransparency = 0.1; checkbox.Text = "✓"
-                    btn.BackgroundColor3 = Color3.fromRGB(30,30,40); btn.BackgroundTransparency = 0.15
-                    btn.BorderColor3 = Color3.fromRGB(80,150,255); btn.TextColor3 = Color3.fromRGB(255,255,255)
-                else
-                    checkbox.BackgroundColor3 = Color3.fromRGB(30,30,30); checkbox.BackgroundTransparency = 0.3; checkbox.Text = ""
-                    btn.BackgroundColor3 = Color3.fromRGB(20,20,20); btn.BackgroundTransparency = 0.3
-                    btn.BorderColor3 = Color3.fromRGB(60,60,60); btn.TextColor3 = Color3.fromRGB(200,200,200)
-                end
-                if aura_active then applyAura() end
-            end
-
-            local function toggle()
-                selected_auras[aura_name] = not selected_auras[aura_name]; updateCheckbox()
-            end
-
-            btn.MouseButton1Click:Connect(toggle); btn.TouchTap:Connect(toggle)
-            checkbox.MouseButton1Click:Connect(toggle); checkbox.TouchTap:Connect(toggle)
-            auraButtons[aura_name] = {btn=btn, checkbox=checkbox, update=updateCheckbox}
-            updateCheckbox()
-        end
-
-        for i, name in ipairs(aura_order) do createAuraButton(name, i-1) end
-
-        -- Container sizing
-        local count = #aura_order; local height = count*31+10
-        ItemsContainer.Size = UDim2.new(1,0,0,height); ScrollFrame.CanvasSize = UDim2.new(0,0,0,height)
-
-        -- ALL button
-        local allOn = false
-        local function toggleAll()
-            allOn = not allOn
-            for _, name in ipairs(aura_order) do selected_auras[name] = allOn end
-            for name, data in pairs(auraButtons) do data.update() end
-            AllBtn.Text = allOn and "ALL" or "NONE"
-            if aura_active then applyAura() end
-        end
-        AllBtn.MouseButton1Click:Connect(toggleAll); AllBtn.TouchTap:Connect(toggleAll)
-
-        -- Toggle menu
-        local menuVisible = false
-        local function toggleMenu()
-            menuVisible = not menuVisible; Menu.Visible = menuVisible
-            if menuVisible then
-                Menu.Position = UDim2.new(0.5,-140,0.5,-175)
-                if not aura_active then aura_active = true; applyAura() end
-            end
-        end
-        CloseBtn.MouseButton1Click:Connect(toggleMenu); CloseBtn.TouchTap:Connect(toggleMenu)
-        ToggleBtn.MouseButton1Click:Connect(toggleMenu); ToggleBtn.TouchTap:Connect(toggleMenu)
-
-        _uis.InputBegan:Connect(function(input, processed)
-            if processed then return end
-            if input.KeyCode == Enum.KeyCode.RightAlt then toggleMenu() end
-        end)
 
         _player.CharacterAdded:Connect(function()
-            task.wait(0.5); if aura_active then applyAura() end
+            task.wait(0.5); applyAura()
         end)
 
-        task.wait(0.5); toggleMenu()
+        -- ── WindUI Controls ───────────────────────────────────
+        VisualsTab:Paragraph({
+            Title = "Aura Selector",
+            Content = "Toggle auras below, pick color, then enable. Supports mixing multiple auras.",
+        })
+
+        -- Master ON/OFF
+        VisualsTab:Toggle({
+            Title = "Enable Auras",
+            Description = "Apply selected auras to your character",
+            Default = false,
+            Callback = function(state)
+                aura_active = state
+                applyAura()
+            end,
+        })
+
+        -- Individual aura toggles
+        VisualsTab:Paragraph({
+            Title = "Aura List",
+            Content = "Select one or more auras to stack on your character.",
+        })
+
+        for _, name in ipairs(aura_order) do
+            local auraName = name
+            VisualsTab:Toggle({
+                Title = auraName:sub(1,1):upper()..auraName:sub(2),
+                Default = false,
+                Callback = function(state)
+                    selected_auras[auraName] = state
+                    applyAura()
+                end,
+            })
+        end
+
+        -- Color (R G B sliders)
+        VisualsTab:Paragraph({
+            Title = "Aura Color",
+            Content = "Adjust RGB to change the color tint of all active auras.",
+        })
+
+        VisualsTab:Slider({
+            Title = "Red",
+            Description = "Red channel (0-255)",
+            Default = 133,
+            Min = 0,
+            Max = 255,
+            Rounding = 0,
+            Callback = function(val)
+                aura_color = Color3.fromRGB(val, aura_color.G*255, aura_color.B*255)
+                applyAura()
+            end,
+        })
+
+        VisualsTab:Slider({
+            Title = "Green",
+            Description = "Green channel (0-255)",
+            Default = 220,
+            Min = 0,
+            Max = 255,
+            Rounding = 0,
+            Callback = function(val)
+                aura_color = Color3.fromRGB(aura_color.R*255, val, aura_color.B*255)
+                applyAura()
+            end,
+        })
+
+        VisualsTab:Slider({
+            Title = "Blue",
+            Description = "Blue channel (0-255)",
+            Default = 255,
+            Min = 0,
+            Max = 255,
+            Rounding = 0,
+            Callback = function(val)
+                aura_color = Color3.fromRGB(aura_color.R*255, aura_color.G*255, val)
+                applyAura()
+            end,
+        })
+
+        -- Quick presets
+        VisualsTab:Paragraph({
+            Title = "Color Presets",
+            Content = "One-click color presets for your aura.",
+        })
+
+        local colorPresets = {"Default (Blue)","Red","Green","Gold","Purple","White","Rainbow (cycle)"}
+
+        VisualsTab:Dropdown({
+            Title = "Color Preset",
+            Description = "Pick a preset color",
+            Values = colorPresets,
+            Value = "Default (Blue)",
+            Callback = function(val)
+                if val == "Default (Blue)" then
+                    aura_color = Color3.fromRGB(133, 220, 255)
+                elseif val == "Red" then
+                    aura_color = Color3.fromRGB(255, 60, 60)
+                elseif val == "Green" then
+                    aura_color = Color3.fromRGB(60, 255, 100)
+                elseif val == "Gold" then
+                    aura_color = Color3.fromRGB(255, 200, 50)
+                elseif val == "Purple" then
+                    aura_color = Color3.fromRGB(180, 60, 255)
+                elseif val == "White" then
+                    aura_color = Color3.fromRGB(255, 255, 255)
+                elseif val == "Rainbow (cycle)" then
+                    task.spawn(function()
+                        local hue = 0
+                        while aura_active do
+                            hue = (hue + 0.005) % 1
+                            aura_color = Color3.fromHSV(hue, 1, 1)
+                            applyAura()
+                            task.wait(0.05)
+                        end
+                    end)
+                    return
+                end
+                applyAura()
+            end,
+        })
+
+        -- Clear button
+        VisualsTab:Button({
+            Title = "Clear All Auras",
+            Description = "Remove all aura effects from character",
+            Callback = function()
+                clearAura()
+                v18:Notify({
+                    Title = "CrystalHub",
+                    Content = "Auras cleared.",
+                    Duration = 2,
+                    Icon = "eye",
+                })
+            end,
+        })
     end
     -- ============================================================
     --  END AURA SYSTEM
     -- ============================================================
+
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
