@@ -1,3 +1,4 @@
+-- жудуюв
 local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302
 
 do
@@ -3784,12 +3785,12 @@ do
     --  HAT SYSTEM — переменные и функции
     -- ============================================================
     local tau = math.pi * 2
-    local camera = Workspace.CurrentCamera
-    local player = LocalPlayer
+    local hatCamera = Workspace.CurrentCamera
+    local hatPlayer = LocalPlayer
 
     local HatVariables = {
         enabled      = false,
-        style        = "Classic",   -- "Classic" | "Drawing"
+        style        = "Classic",
         color        = Color3.fromRGB(255, 40, 40),
         transparency = 0.3,
         reflectance  = 0,
@@ -3801,12 +3802,12 @@ do
         parts        = {},
         connection   = nil,
     }
-    local drawings = {}
+    local hatDrawings = {}
 
     local function Hat_RemoveClassic()
-        if HatVariables.parts[player.Character] then
-            HatVariables.parts[player.Character]:Destroy()
-            HatVariables.parts[player.Character] = nil
+        if HatVariables.parts[hatPlayer.Character] then
+            HatVariables.parts[hatPlayer.Character]:Destroy()
+            HatVariables.parts[hatPlayer.Character] = nil
         end
     end
 
@@ -3815,7 +3816,6 @@ do
         local head = char:WaitForChild("Head", 5)
         if not head then return end
         Hat_RemoveClassic()
-
         local hat = Instance.new("Part")
         hat.Name = "ChineseHat"
         hat.Transparency = HatVariables.transparency
@@ -3823,17 +3823,14 @@ do
         hat.Material = Enum.Material.Neon
         hat.CanCollide = false
         hat.Reflectance = HatVariables.reflectance
-
         local mesh = Instance.new("SpecialMesh")
         mesh.MeshId = "rbxassetid://1033714"
         mesh.Scale = Vector3.new(HatVariables.radius, HatVariables.height, HatVariables.radius)
         mesh.Parent = hat
-
         local weld = Instance.new("WeldConstraint")
         weld.Part0 = head
         weld.Part1 = hat
         weld.Parent = hat
-
         hat.CFrame = head.CFrame * CFrame.new(0, 1.1, 0)
         hat.Parent = char
         HatVariables.parts[char] = hat
@@ -3841,16 +3838,14 @@ do
 
     local function Hat_UpdateClassic()
         for char, hat in pairs(HatVariables.parts) do
-            if hat and hat.Parent and char == player.Character then
+            if hat and hat.Parent and char == hatPlayer.Character then
                 hat.Transparency = HatVariables.transparency
                 hat.Reflectance  = HatVariables.reflectance
-
                 if HatVariables.rainbow then
                     hat.Color = Color3.fromHSV(tick() % HatVariables.rainbowSpeed / HatVariables.rainbowSpeed, 1, 1)
                 else
                     hat.Color = HatVariables.color
                 end
-
                 local mesh = hat:FindFirstChildOfClass("SpecialMesh")
                 if mesh then
                     mesh.Scale = Vector3.new(HatVariables.radius, HatVariables.height, HatVariables.radius)
@@ -3860,41 +3855,34 @@ do
     end
 
     local function Hat_UpdateDrawing()
-        local pass = HatVariables.enabled
-            and player.Character
-            and player.Character:FindFirstChild('Head') ~= nil
-            and (camera.CFrame.p - camera.Focus.p).magnitude > 1
-            and player.Character.Humanoid.Health > 0
-
-        for i = 1, #drawings do
-            local line, triangle = drawings[i][1], drawings[i][2]
+        local char = hatPlayer.Character
+        local pass = HatVariables.enabled and char and char:FindFirstChild('Head')
+            and (hatCamera.CFrame.p - hatCamera.Focus.p).magnitude > 1
+            and char.Humanoid.Health > 0
+        for i = 1, #hatDrawings do
+            local line, triangle = hatDrawings[i][1], hatDrawings[i][2]
             if pass then
                 local color
                 if HatVariables.rainbow then
                     color = Color3.fromHSV(
-                        (tick() % HatVariables.rainbowSpeed / HatVariables.rainbowSpeed - (i / #drawings)) % 1,
-                        0.5, 1
-                    )
+                        (tick() % HatVariables.rainbowSpeed / HatVariables.rainbowSpeed - (i / #hatDrawings)) % 1, 0.5, 1)
                 else
                     color = HatVariables.color
                 end
-
-                local pos      = player.Character.Head.Position + Vector3.new(0, 0.75, 0)
+                local pos      = char.Head.Position + Vector3.new(0, 0.75, 0)
                 local topWorld = pos + Vector3.new(0, 0.75, 0)
-
-                local last, next2 = (i / HatVariables.sides) * tau, ((i + 1) / HatVariables.sides) * tau
-                local lastWorld  = pos + (Vector3.new(math.cos(last),  0, math.sin(last))  * HatVariables.radius)
-                local nextWorld  = pos + (Vector3.new(math.cos(next2), 0, math.sin(next2)) * HatVariables.radius)
-                local lastScreen = camera:WorldToViewportPoint(lastWorld)
-                local nextScreen = camera:WorldToViewportPoint(nextWorld)
-                local topScreen  = camera:WorldToViewportPoint(topWorld)
-
+                local last  = (i / HatVariables.sides) * tau
+                local next2 = ((i + 1) / HatVariables.sides) * tau
+                local lastWorld  = pos + Vector3.new(math.cos(last),  0, math.sin(last))  * HatVariables.radius
+                local nextWorld  = pos + Vector3.new(math.cos(next2), 0, math.sin(next2)) * HatVariables.radius
+                local lastScreen = hatCamera:WorldToViewportPoint(lastWorld)
+                local nextScreen = hatCamera:WorldToViewportPoint(nextWorld)
+                local topScreen  = hatCamera:WorldToViewportPoint(topWorld)
                 line.From  = Vector2.new(lastScreen.X, lastScreen.Y)
                 line.To    = Vector2.new(nextScreen.X, nextScreen.Y)
                 line.Color = color
                 line.Transparency = 1 - HatVariables.transparency
                 line.Visible = true
-
                 triangle.PointA = Vector2.new(topScreen.X, topScreen.Y)
                 triangle.PointB = line.From
                 triangle.PointC = line.To
@@ -3910,26 +3898,25 @@ do
 
     local function Hat_UpdateSides(newSides)
         HatVariables.sides = newSides
-        for i = 1, #drawings do
-            drawings[i][1]:Remove()
-            drawings[i][2]:Remove()
+        for i = 1, #hatDrawings do
+            hatDrawings[i][1]:Remove()
+            hatDrawings[i][2]:Remove()
         end
-        drawings = {}
+        hatDrawings = {}
         for i = 1, newSides do
-            drawings[i] = {Drawing.new('Line'), Drawing.new('Triangle')}
-            drawings[i][1].ZIndex    = 2
-            drawings[i][1].Thickness = 2
-            drawings[i][2].ZIndex    = 1
-            drawings[i][2].Filled    = true
+            hatDrawings[i] = {Drawing.new('Line'), Drawing.new('Triangle')}
+            hatDrawings[i][1].ZIndex    = 2
+            hatDrawings[i][1].Thickness = 2
+            hatDrawings[i][2].ZIndex    = 1
+            hatDrawings[i][2].Filled    = true
         end
     end
 
     local function Hat_ToggleEnabled(value)
         HatVariables.enabled = value
-
         if value then
-            if HatVariables.style == "Classic" and player.Character then
-                Hat_AddClassic(player.Character)
+            if HatVariables.style == "Classic" and hatPlayer.Character then
+                Hat_AddClassic(hatPlayer.Character)
             end
             if HatVariables.connection then HatVariables.connection:Disconnect() end
             HatVariables.connection = RunService.Heartbeat:Connect(function()
@@ -3938,10 +3925,10 @@ do
                 end
             end)
         else
-            if player.Character then Hat_RemoveClassic() end
-            for i = 1, #drawings do
-                drawings[i][1].Visible = false
-                drawings[i][2].Visible = false
+            if hatPlayer.Character then Hat_RemoveClassic() end
+            for i = 1, #hatDrawings do
+                hatDrawings[i][1].Visible = false
+                hatDrawings[i][2].Visible = false
             end
             if HatVariables.connection then
                 HatVariables.connection:Disconnect()
@@ -3960,11 +3947,8 @@ do
         end
     end
 
-    -- Drawing-шляпа обновляется в RenderStepped
     RunService.RenderStepped:Connect(function()
-        if HatVariables.enabled and HatVariables.style == "Drawing" then
-            Hat_UpdateDrawing()
-        end
+        if HatVariables.enabled and HatVariables.style == "Drawing" then Hat_UpdateDrawing() end
     end)
 
     -- Visuals tab: ready for the user's Visuals code.
@@ -4732,50 +4716,37 @@ VisualsTab:Button({
 })
 
     -- ============================================================
-    --  HAT — UI блок во вкладке Visuals
+    --  HAT — UI во вкладке Visuals
     -- ============================================================
     VisualsTab:Divider()
     VisualsTab:Paragraph({
         Title   = '🎩 Hat System',
         Content = 'Шляпа над головой — Classic (3D) или Drawing (2D).',
     })
-
     VisualsTab:Toggle({
-        Title   = 'Enable Hat',
-        Default = false,
-        Callback = function(v)
-            Hat_ToggleEnabled(v)
-        end,
+        Title    = 'Enable Hat',
+        Default  = false,
+        Callback = function(val) Hat_ToggleEnabled(val) end,
     })
-
     VisualsTab:Dropdown({
-        Title  = 'Hat Style',
-        Values = {'Classic', 'Drawing'},
-        Value  = 'Classic',
-        Callback = function(v)
-            Hat_ChangeStyle(v)
-        end,
+        Title    = 'Hat Style',
+        Values   = {'Classic', 'Drawing'},
+        Value    = 'Classic',
+        Callback = function(val) Hat_ChangeStyle(val) end,
     })
-
     VisualsTab:Toggle({
-        Title   = 'Rainbow Mode',
-        Default = false,
-        Callback = function(v)
-            HatVariables.rainbow = v
-        end,
+        Title    = 'Rainbow Mode',
+        Default  = false,
+        Callback = function(val) HatVariables.rainbow = val end,
     })
-
     VisualsTab:ColorPicker({
-        Title   = 'Hat Color',
-        Default = Color3.fromRGB(255, 40, 40),
-        Callback = function(v)
-            HatVariables.color = v
-        end,
+        Title    = 'Hat Color',
+        Default  = Color3.fromRGB(255, 40, 40),
+        Callback = function(val) HatVariables.color = val end,
     })
-
     VisualsTab:Button({
         Title       = 'Radius Slider',
-        Description = 'Размер шляпы по горизонтали (0.5 – 4)',
+        Description = 'Размер шляпы (0.5 – 4.0)',
         Callback = function()
             v25('Hat Radius', 5, 40, math.round(HatVariables.radius * 10), 1, function(val)
                 HatVariables.radius = val / 10
@@ -4784,7 +4755,6 @@ VisualsTab:Button({
             end)
         end,
     })
-
     VisualsTab:Button({
         Title       = 'Height Slider',
         Description = 'Высота шляпы (0.2 – 2.0)',
@@ -4796,19 +4766,6 @@ VisualsTab:Button({
             end)
         end,
     })
-
-    VisualsTab:Button({
-        Title       = 'Transparency Slider',
-        Description = 'Прозрачность (0 = полная, 10 = непрозрачная)',
-        Callback = function()
-            v25('Hat Transparency', 0, 10, math.round((1 - HatVariables.transparency) * 10), 1, function(val)
-                HatVariables.transparency = 1 - val / 10
-            end, function()
-                HatVariables.transparency = 0.3
-            end)
-        end,
-    })
-
     VisualsTab:Button({
         Title       = 'Sides Slider (Drawing)',
         Description = 'Кол-во граней для Drawing-стиля (4 – 50)',
