@@ -1664,50 +1664,53 @@ do
                 u131 = LocalPlayer
 
                 do
+                    -- ===================== SKYBOX ASSETS =====================
+                    local SkyboxAssets = {
+                        ["Black Storm"] = { Bk="rbxassetid://15502511288", Dn="rbxassetid://15502508460", Ft="rbxassetid://15502510289", Lf="rbxassetid://15502507918", Rt="rbxassetid://15502509398", Up="rbxassetid://15502511911" },
+                        ["HD"] = { Bk="http://www.roblox.com/asset/?id=16553658937", Dn="http://www.roblox.com/asset/?id=16553660713", Ft="http://www.roblox.com/asset/?id=16553662144", Lf="http://www.roblox.com/asset/?id=16553664042", Rt="http://www.roblox.com/asset/?id=16553665766", Up="http://www.roblox.com/asset/?id=16553667750" },
+                        ["Snow"] = { Bk="http://www.roblox.com/asset/?id=155657655", Dn="http://www.roblox.com/asset/?id=155674246", Ft="http://www.roblox.com/asset/?id=155657609", Lf="http://www.roblox.com/asset/?id=155657671", Rt="http://www.roblox.com/asset/?id=155657619", Up="http://www.roblox.com/asset/?id=155674931" },
+                        ["Blue Space"] = { Bk="rbxassetid://15536110634", Dn="rbxassetid://15536112543", Ft="rbxassetid://15536116141", Lf="rbxassetid://15536114370", Rt="rbxassetid://15536118762", Up="rbxassetid://15536117282" },
+                        ["Realistic"] = { Bk="rbxassetid://653719502", Dn="rbxassetid://653718790", Ft="rbxassetid://653719067", Lf="rbxassetid://653719190", Rt="rbxassetid://653718931", Up="rbxassetid://653719321" },
+                        ["Stormy"] = { Bk="http://www.roblox.com/asset/?id=18703245834", Dn="http://www.roblox.com/asset/?id=18703243349", Ft="http://www.roblox.com/asset/?id=18703240532", Lf="http://www.roblox.com/asset/?id=18703237556", Rt="http://www.roblox.com/asset/?id=18703235430", Up="http://www.roblox.com/asset/?id=18703232671" },
+                        ["Pink"] = { Bk="rbxassetid://12216109205", Dn="rbxassetid://12216109875", Ft="rbxassetid://12216109489", Lf="rbxassetid://12216110170", Rt="rbxassetid://12216110471", Up="rbxassetid://12216108877" },
+                        ["Sunset"] = { Bk="rbxassetid://600830446", Dn="rbxassetid://600831635", Ft="rbxassetid://600832720", Lf="rbxassetid://600886090", Rt="rbxassetid://600833862", Up="rbxassetid://600835177" },
+                        ["Arctic"] = { Bk="http://www.roblox.com/asset/?id=225469390", Dn="http://www.roblox.com/asset/?id=225469395", Ft="http://www.roblox.com/asset/?id=225469403", Lf="http://www.roblox.com/asset/?id=225469450", Rt="http://www.roblox.com/asset/?id=225469471", Up="http://www.roblox.com/asset/?id=225469481" },
+                        ["Space"] = { Bk="http://www.roblox.com/asset/?id=166509999", Dn="http://www.roblox.com/asset/?id=166510057", Ft="http://www.roblox.com/asset/?id=166510116", Lf="http://www.roblox.com/asset/?id=166510092", Rt="http://www.roblox.com/asset/?id=166510131", Up="http://www.roblox.com/asset/?id=166510114" },
+                        ["Roblox Default"] = { Bk="rbxasset://textures/sky/sky512_bk.tex", Dn="rbxasset://textures/sky/sky512_dn.tex", Ft="rbxasset://textures/sky/sky512_ft.tex", Lf="rbxasset://textures/sky/sky512_lf.tex", Rt="rbxasset://textures/sky/sky512_rt.tex", Up="rbxasset://textures/sky/sky512_up.tex" },
+                        ["Red Night"] = { Bk="http://www.roblox.com/asset/?id=401664839", Dn="http://www.roblox.com/asset/?id=401664862", Ft="http://www.roblox.com/asset/?id=401664960", Lf="http://www.roblox.com/asset/?id=401664881", Rt="http://www.roblox.com/asset/?id=401664901", Up="http://www.roblox.com/asset/?id=401664936" },
+                        ["Deep Space 1"] = { Bk="http://www.roblox.com/asset/?id=149397692", Dn="http://www.roblox.com/asset/?id=149397686", Ft="http://www.roblox.com/asset/?id=149397697", Lf="http://www.roblox.com/asset/?id=149397684", Rt="http://www.roblox.com/asset/?id=149397688", Up="http://www.roblox.com/asset/?id=149397702" },
+                        ["Pink Skies"] = { Bk="http://www.roblox.com/asset/?id=151165214", Dn="http://www.roblox.com/asset/?id=151165197", Ft="http://www.roblox.com/asset/?id=151165224", Lf="http://www.roblox.com/asset/?id=151165191", Rt="http://www.roblox.com/asset/?id=151165206", Up="http://www.roblox.com/asset/?id=151165227" },
+                        ["Purple Sunset"] = { Bk="rbxassetid://264908339", Dn="rbxassetid://264907909", Ft="rbxassetid://264909420", Lf="rbxassetid://264909758", Rt="rbxassetid://264908886", Up="rbxassetid://264907379" },
+                        ["Blue Night"] = { Bk="http://www.roblox.com/asset/?id=12064107", Dn="http://www.roblox.com/asset/?id=12064152", Ft="http://www.roblox.com/asset/?id=12064121", Lf="http://www.roblox.com/asset/?id=12063984", Rt="http://www.roblox.com/asset/?id=12064115", Up="http://www.roblox.com/asset/?id=12064131" },
+                        ["Blossom Daylight"] = { Bk="http://www.roblox.com/asset/?id=271042516", Dn="http://www.roblox.com/asset/?id=271077243", Ft="http://www.roblox.com/asset/?id=271042556", Lf="http://www.roblox.com/asset/?id=271042310", Rt="http://www.roblox.com/asset/?id=271042467", Up="http://www.roblox.com/asset/?id=271077958" },
+                        ["Blue Nebula"] = { Bk="http://www.roblox.com/asset?id=135207744", Dn="http://www.roblox.com/asset?id=135207662", Ft="http://www.roblox.com/asset?id=135207770", Lf="http://www.roblox.com/asset?id=135207615", Rt="http://www.roblox.com/asset?id=135207695", Up="http://www.roblox.com/asset?id=135207794" },
+                        ["Blue Planet"] = { Bk="rbxassetid://218955819", Dn="rbxassetid://218953419", Ft="rbxassetid://218954524", Lf="rbxassetid://218958493", Rt="rbxassetid://218957134", Up="rbxassetid://218950090" },
+                        ["Deep Space 2"] = { Bk="http://www.roblox.com/asset/?id=159248188", Dn="http://www.roblox.com/asset/?id=159248183", Ft="http://www.roblox.com/asset/?id=159248187", Lf="http://www.roblox.com/asset/?id=159248173", Rt="http://www.roblox.com/asset/?id=159248192", Up="http://www.roblox.com/asset/?id=159248176" },
+                        ["Summer"] = { Bk="rbxassetid://16648590964", Dn="rbxassetid://16648617436", Ft="rbxassetid://16648595424", Lf="rbxassetid://16648566370", Rt="rbxassetid://16648577071", Up="rbxassetid://16648598180" },
+                        ["Galaxy"] = { Bk="rbxassetid://15983968922", Dn="rbxassetid://15983966825", Ft="rbxassetid://15983965025", Lf="rbxassetid://15983967420", Rt="rbxassetid://15983966246", Up="rbxassetid://15983964246" },
+                        ["Stylized"] = { Bk="rbxassetid://18351376859", Dn="rbxassetid://18351374919", Ft="rbxassetid://18351376800", Lf="rbxassetid://18351376469", Rt="rbxassetid://18351376457", Up="rbxassetid://18351377189" },
+                        ["Minecraft"] = { Bk="rbxassetid://8735166756", Dn="http://www.roblox.com/asset/?id=8735166707", Ft="http://www.roblox.com/asset/?id=8735231668", Lf="http://www.roblox.com/asset/?id=8735166755", Rt="http://www.roblox.com/asset/?id=8735166751", Up="http://www.roblox.com/asset/?id=8735166729" },
+                        ["Cloudy Rain"] = { Bk="http://www.roblox.com/asset/?id=4498828382", Dn="http://www.roblox.com/asset/?id=4498828812", Ft="http://www.roblox.com/asset/?id=4498829917", Lf="http://www.roblox.com/asset/?id=4498830911", Rt="http://www.roblox.com/asset/?id=4498830417", Up="http://www.roblox.com/asset/?id=4498831746" },
+                        ["Black Cloudy Rain"] = { Bk="http://www.roblox.com/asset/?id=149679669", Dn="http://www.roblox.com/asset/?id=149681979", Ft="http://www.roblox.com/asset/?id=149679690", Lf="http://www.roblox.com/asset/?id=149679709", Rt="http://www.roblox.com/asset/?id=149679722", Up="http://www.roblox.com/asset/?id=149680199" },
+                    }
+                    -- Build t7 list for picker (using Up face as color preview reference)
                     local t7 = {}
-                    local t8 = {
-                        name = 'Red',
-                        id = '98490421374360',
-                        color = Color3.fromRGB(200, 50, 50),
+                    local skyColorMap = {
+                        ["Black Storm"]={30,30,40}, ["HD"]={100,160,220}, ["Snow"]={200,220,240},
+                        ["Blue Space"]={40,80,180}, ["Realistic"]={120,170,220}, ["Stormy"]={60,60,80},
+                        ["Pink"]={220,100,160}, ["Sunset"]={230,120,60}, ["Arctic"]={180,210,240},
+                        ["Space"]={20,20,60}, ["Roblox Default"]={100,180,255}, ["Red Night"]={160,30,30},
+                        ["Deep Space 1"]={20,20,50}, ["Pink Skies"]={220,140,180}, ["Purple Sunset"]={140,60,180},
+                        ["Blue Night"]={30,60,140}, ["Blossom Daylight"]={180,220,200}, ["Blue Nebula"]={60,100,200},
+                        ["Blue Planet"]={60,120,200}, ["Deep Space 2"]={20,20,60}, ["Summer"]={100,200,240},
+                        ["Galaxy"]={80,40,160}, ["Stylized"]={120,180,240}, ["Minecraft"]={100,180,240},
+                        ["Cloudy Rain"]={100,110,120}, ["Black Cloudy Rain"]={30,30,35},
                     }
-                    local t9 = {
-                        name = 'Pink',
-                        id = '95000769820905',
-                        color = Color3.fromRGB(220, 100, 180),
-                    }
-                    local t10 = {
-                        name = 'Pink 2',
-                        id = '82988835868087',
-                        color = Color3.fromRGB(200, 80, 160),
-                    }
-                    local t11 = {
-                        name = 'Green',
-                        id = '5036205687',
-                        color = Color3.fromRGB(50, 180, 80),
-                    }
-                    local t12 = {
-                        name = 'Black',
-                        id = '80807192441609',
-                        color = Color3.fromRGB(30, 30, 30),
-                    }
-                    local t13 = {
-                        name = 'Cosmic',
-                        id = '77816282467771',
-                        color = Color3.fromRGB(80, 40, 160),
-                    }
-                    local t14 = {
-                        name = 'Yellow',
-                        id = '2669948520',
-                        color = Color3.fromRGB(220, 190, 40),
-                    }
-
-                    t7[1] = t8
-                    t7[2] = t9
-                    t7[3] = t10
-                    t7[4] = t11
-                    t7[5] = t12
-                    t7[6] = t13
-                    t7[7] = t14
+                    local skyboxOrder = {"Black Storm","HD","Snow","Blue Space","Realistic","Stormy","Pink","Sunset","Arctic","Space","Roblox Default","Red Night","Deep Space 1","Pink Skies","Purple Sunset","Blue Night","Blossom Daylight","Blue Nebula","Blue Planet","Deep Space 2","Summer","Galaxy","Stylized","Minecraft","Cloudy Rain","Black Cloudy Rain"}
+                    for i, name in ipairs(skyboxOrder) do
+                        local c = skyColorMap[name] or {128,128,128}
+                        t7[i] = { name=name, id=name, color=Color3.fromRGB(c[1],c[2],c[3]) }
+                    end
 
                     local u140 = nil
                     local u141 = false
@@ -1766,17 +1769,26 @@ do
                         end
 
                         local Sky = Instance.new('Sky', u146)
-
                         Sky.Name = 'CrystalHub_CustomSky'
 
-                        local v625 = 'rbxassetid://' .. tostring(p27)
-
-                        Sky.SkyboxBk = v625
-                        Sky.SkyboxDn = v625
-                        Sky.SkyboxFt = v625
-                        Sky.SkyboxLf = v625
-                        Sky.SkyboxRt = v625
-                        Sky.SkyboxUp = v625
+                        -- p27 is either a skybox name (from SkyboxAssets) or a raw asset ID string
+                        local faces = SkyboxAssets[tostring(p27)]
+                        if faces then
+                            Sky.SkyboxBk = faces.Bk
+                            Sky.SkyboxDn = faces.Dn
+                            Sky.SkyboxFt = faces.Ft
+                            Sky.SkyboxLf = faces.Lf
+                            Sky.SkyboxRt = faces.Rt
+                            Sky.SkyboxUp = faces.Up
+                        else
+                            local v625 = 'rbxassetid://' .. tostring(p27)
+                            Sky.SkyboxBk = v625
+                            Sky.SkyboxDn = v625
+                            Sky.SkyboxFt = v625
+                            Sky.SkyboxLf = v625
+                            Sky.SkyboxRt = v625
+                            Sky.SkyboxUp = v625
+                        end
                         Sky.SunTextureId = ''
                         Sky.MoonTextureId = ''
                         Sky.SunAngularSize = 0
@@ -4000,155 +4012,12 @@ do
     -- ============================================================
     --  END AURA SYSTEM
     -- ============================================================
-
-
-    v301:Paragraph({
-        Title = 'Auto-Loaded Buttons',
-        Content = 'Gold Bomb, Normal Bomb and Shoot/Throw are enabled by default.',
-    })
-
-    local t27 = {
-        Title = 'Show Gold Bomb',
-        Default = true,
-    }
-    local u304 = v232
-
-    function t27.Callback(p56)
-        u304(p56)
-    end
-
-    v301:Toggle(t27)
-
-    local t28 = {
-        Title = 'Show Normal Bomb',
-        Default = true,
-    }
-    local u306 = v239
-
-    function t28.Callback(p57)
-        u306(p57)
-    end
-
-    v301:Toggle(t28)
-
-    local t29 = {
-        Title = 'Show Shoot/Throw',
-        Default = true,
-    }
-    local u308 = v244
-
-    function t29.Callback(p58)
-        u308(p58)
-    end
-
-    v301:Toggle(t29)
-end
-
-v301:Divider()
-v301:Paragraph({
-    Title = 'Optional Buttons',
-    Content = 'Toggle to add or remove from screen.',
-})
-v301:Toggle({
-    Title = 'Load ESP Toggle',
-    Default = false,
-    Callback = function(p59)
-        u252(p59)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Flick',
-    Default = false,
-    Callback = function(p60)
-        u257(p60)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Grab Gun',
-    Default = false,
-    Callback = function(p61)
-        u276(p61)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Speed Glitch',
-    Default = false,
-    Callback = function(p62)
-        u263(p62)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Stretch',
-    Default = false,
-    Callback = function(p63)
-        u270(p63)
-    end,
-})
-v301:Button({
-    Title = 'Stretch Resolution Slider',
-    Description = '10% = very wide  /  100% = normal',
-    Callback = function()
-        local v607 = n17 * 100
-        local v608 = math.round(v607)
-
-        u126('Stretch Resolution', 10, 100, v608, 5, function(p64)
-            n17 = p64 / 100
-
-            if u120 then
-                u127(true)
-            end
-
-            local v886 = 'Stretch set to ' .. p64 .. '%  (1.0 = normal)'
-
-            u128:Notify({
-                Title = 'CrystalHub',
-                Content = tostring(v886),
-                Duration = 3,
-                Icon = 'bell',
-            })
-        end, function()
-            n17 = 0.5
-
-            if u120 then
-                u127(true)
-            end
-
-            u128:Notify({
-                Title = 'CrystalHub',
-                Content = tostring('Stretch reset to 50%'),
-                Duration = 3,
-                Icon = 'bell',
-            })
-        end)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Fling Murderer',
-    Default = false,
-    Callback = function(p65)
-        u287(p65)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Fling Sheriff',
-    Default = false,
-    Callback = function(p66)
-        u293(p66)
-    end,
-})
-v301:Toggle({
-    Title = 'Load Wall Hop',
-    Default = false,
-    Callback = function(p67)
-        u281(p67)
-    end,
-})
-v301:Divider()
-v301:Paragraph({
+VisualsTab:Divider()
+VisualsTab:Paragraph({
     Title = 'Skybox',
     Content = 'Click the button below to open the visual skybox picker.\nSelecting a preset applies it instantly.',
 })
-v301:Button({
+VisualsTab:Button({
     Title = 'Open Skybox Picker',
     Description = 'Color preview list \u{2014} click to apply instantly',
     Callback = function()
@@ -4381,9 +4250,9 @@ function t30.Callback()
     u310()
 end
 
-v301:Button(t30)
-v301:Divider()
-v301:Paragraph({
+VisualsTab:Button(t30)
+VisualsTab:Divider()
+VisualsTab:Paragraph({
     Title = 'Crosshair',
     Content = 'Visible only when ShiftLock is active.\nSpin option is inside the picker.',
 })
@@ -4486,8 +4355,8 @@ function t31.Callback(p69)
     })
 end
 
-v301:Toggle(t31)
-v301:Button({
+VisualsTab:Toggle(t31)
+VisualsTab:Button({
     Title = 'Open Cursor Picker',
     Description = 'Visual grid with spin toggle \u{2014} click to apply',
     Callback = function()
@@ -4717,6 +4586,149 @@ v301:Button({
         end
 
         RuzCursorPicker:Destroy()
+    end,
+})
+
+
+    v301:Paragraph({
+        Title = 'Auto-Loaded Buttons',
+        Content = 'Gold Bomb, Normal Bomb and Shoot/Throw are enabled by default.',
+    })
+
+    local t27 = {
+        Title = 'Show Gold Bomb',
+        Default = true,
+    }
+    local u304 = v232
+
+    function t27.Callback(p56)
+        u304(p56)
+    end
+
+    v301:Toggle(t27)
+
+    local t28 = {
+        Title = 'Show Normal Bomb',
+        Default = true,
+    }
+    local u306 = v239
+
+    function t28.Callback(p57)
+        u306(p57)
+    end
+
+    v301:Toggle(t28)
+
+    local t29 = {
+        Title = 'Show Shoot/Throw',
+        Default = true,
+    }
+    local u308 = v244
+
+    function t29.Callback(p58)
+        u308(p58)
+    end
+
+    v301:Toggle(t29)
+end
+
+v301:Divider()
+v301:Paragraph({
+    Title = 'Optional Buttons',
+    Content = 'Toggle to add or remove from screen.',
+})
+v301:Toggle({
+    Title = 'Load ESP Toggle',
+    Default = false,
+    Callback = function(p59)
+        u252(p59)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Flick',
+    Default = false,
+    Callback = function(p60)
+        u257(p60)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Grab Gun',
+    Default = false,
+    Callback = function(p61)
+        u276(p61)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Speed Glitch',
+    Default = false,
+    Callback = function(p62)
+        u263(p62)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Stretch',
+    Default = false,
+    Callback = function(p63)
+        u270(p63)
+    end,
+})
+v301:Button({
+    Title = 'Stretch Resolution Slider',
+    Description = '10% = very wide  /  100% = normal',
+    Callback = function()
+        local v607 = n17 * 100
+        local v608 = math.round(v607)
+
+        u126('Stretch Resolution', 10, 100, v608, 5, function(p64)
+            n17 = p64 / 100
+
+            if u120 then
+                u127(true)
+            end
+
+            local v886 = 'Stretch set to ' .. p64 .. '%  (1.0 = normal)'
+
+            u128:Notify({
+                Title = 'CrystalHub',
+                Content = tostring(v886),
+                Duration = 3,
+                Icon = 'bell',
+            })
+        end, function()
+            n17 = 0.5
+
+            if u120 then
+                u127(true)
+            end
+
+            u128:Notify({
+                Title = 'CrystalHub',
+                Content = tostring('Stretch reset to 50%'),
+                Duration = 3,
+                Icon = 'bell',
+            })
+        end)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Fling Murderer',
+    Default = false,
+    Callback = function(p65)
+        u287(p65)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Fling Sheriff',
+    Default = false,
+    Callback = function(p66)
+        u293(p66)
+    end,
+})
+v301:Toggle({
+    Title = 'Load Wall Hop',
+    Default = false,
+    Callback = function(p67)
+        u281(p67)
     end,
 })
 v301:Divider()
