@@ -1,4 +1,4 @@
-local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302, u912, u913, u914, u915, u916, u917, u918, u919, u920, u921, u922, u923, u924, u925, u926, u927, u928, u929
+local UserInputService, CurrentCamera, n1, n2, u13, n3, u15, u16, u17, v18, v25, u29, u31, u32, u61, u62, t3, t4, v68, v78, u120, n17, u126, u127, u128, v145, u147, u148, u149, u150, u151, u156, u172, u173, u174, u175, u176, u177, u178, v183, u184, u185, u186, u187, u188, u189, u198, u199, id, u201, u202, u205, u206, u207, u208, u209, u210, u211, u212, v232, v239, v244, u252, u257, u263, u270, u276, u281, u287, u293, v301, v302
 
 do
     local u9, u10, u99, u105, u110, u116, u157
@@ -3768,262 +3768,404 @@ do
         end)
     end
 
-    -- Visuals tab: functions ported from the Visual section of the source.
-    local function initVisuals()
-        local Lighting = game:GetService('Lighting')
-        local RunService = game:GetService('RunService')
+    -- Visuals tab: ready for the user's Visuals code.
     local VisualsTab = v300:Tab({
         Title = 'Visuals',
         Icon = 'eye',
     })
 
-    -- China Hat
-    local ChinaHatEnabled = false
-    local ChinaHatColor = Color3.fromRGB(255, 255, 255)
-    local ChinaLightColor = Color3.fromRGB(255, 255, 255)
-    local ChinaLightBrightness = 0
-    local ChinaLightRange = 12
-    local ChinaScale = Vector3.new(1.7, 1.1, 1.7)
+    VisualsTab:Paragraph({
+        Title = 'Aura Viewer',
+        Content = 'Select auras, adjust color and toggle them on your character.',
+    })
 
-    u912 = function(Character)
-        if not Character then return end
-        local Head = Character:FindFirstChild('Head')
-        if not Head then return end
-        local old = Character:FindFirstChild('ChinaHat')
-        if old then old:Destroy() end
-        local Cone = Instance.new('Part')
-        Cone.Name = 'ChinaHat'
-        Cone.Size = Vector3.new(1, 1, 1)
-        Cone.Material = Enum.Material.Neon
-        Cone.Transparency = 0.2
-        Cone.Anchored = false
-        Cone.CanCollide = false
-        Cone.Color = ChinaHatColor
-        local Mesh = Instance.new('SpecialMesh')
-        Mesh.MeshType = Enum.MeshType.FileMesh
-        Mesh.MeshId = 'rbxassetid://1033714'
-        Mesh.Scale = ChinaScale
-        Mesh.Parent = Cone
-        local Weld = Instance.new('Weld')
-        Weld.Part0 = Head
-        Weld.Part1 = Cone
-        Weld.C0 = CFrame.new(0, 0.9, 0)
-        Weld.Parent = Cone
-        local Light = Instance.new('PointLight')
-        Light.Color = ChinaLightColor
-        Light.Brightness = ChinaLightBrightness
-        Light.Range = ChinaLightRange
-        Light.Shadows = true
-        Light.Parent = Cone
-        Cone.Parent = Character
-    end
+    -- ============================================================
+    --  AURA SYSTEM
+    -- ============================================================
+    do
+        local _player = game:GetService("Players").LocalPlayer
+        local _uis    = game:GetService("UserInputService")
+        local _tween  = game:GetService("TweenService")
 
-    u913 = function(Character)
-        if ChinaHatEnabled then u912(Character) end
-    end
+        local aura_ids = {
+            angel     = "97658130917593",
+            starlight = "134645216613107",
+            heavenly  = "139300897520961",
+            ribbon    = "132069507632161",
+            sakura    = "81755778619404",
+            wind      = "80694081850877",
+            flow      = "119913533725648",
+            star      = "73754563740680",
+        }
+        local aura_order = {"angel","starlight","heavenly","ribbon","sakura","wind","flow","star"}
 
-    Players.LocalPlayer.CharacterAdded:Connect(u913)
+        local aura_cache     = {}
+        local aura_particles = {}
+        local aura_color     = Color3.fromRGB(133, 220, 255)
+        local aura_active    = false
+        local colorValues    = {R = 133, G = 220, B = 255}
 
-    local ChinaHatGroup = VisualsTab
-    ChinaHatGroup:Toggle({Title = 'China Hat ESP', Default = false, Callback = function(v)
-        ChinaHatEnabled = v
-        local c = Players.LocalPlayer.Character
-        if v and c then u912(c) elseif c then local h=c:FindFirstChild('ChinaHat'); if h then h:Destroy() end end
-    end})
-    ChinaHatGroup:ColorPicker({Title = 'Hat Color', Default = ChinaHatColor, Callback = function(v)
-        ChinaHatColor=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end
-    end})
-    ChinaHatGroup:ColorPicker({Title = 'Light Color', Default = ChinaLightColor, Callback = function(v)
-        ChinaLightColor=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end
-    end})
-    ChinaHatGroup:Button({Title = 'Light Brightness / Range', Callback = function()
-        v25('Brightness (0-10)',0,10,ChinaLightBrightness,1,function(v) ChinaLightBrightness=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaLightBrightness=0 end)
-        v25('Range (0-50)',0,50,ChinaLightRange,1,function(v) ChinaLightRange=v; local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaLightRange=12 end)
-    end})
-    ChinaHatGroup:Button({Title = 'Hat Scale', Callback = function()
-        v25('Scale X (0.5-3)',0.5,3,ChinaScale.X,0.1,function(v) ChinaScale=Vector3.new(v,ChinaScale.Y,ChinaScale.Z); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(1.7,ChinaScale.Y,ChinaScale.Z) end)
-        v25('Scale Y (0.5-3)',0.5,3,ChinaScale.Y,0.1,function(v) ChinaScale=Vector3.new(ChinaScale.X,v,ChinaScale.Z); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(ChinaScale.X,1.1,ChinaScale.Z) end)
-        v25('Scale Z (0.5-3)',0.5,3,ChinaScale.Z,0.1,function(v) ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,v); local c=Players.LocalPlayer.Character; if ChinaHatEnabled and c then u912(c) end end,function() ChinaScale=Vector3.new(ChinaScale.X,ChinaScale.Y,1.7) end)
-    end})
+        local selected_auras = {}
+        for _, name in ipairs(aura_order) do selected_auras[name] = false end
 
-    local _ok_Aura, _err_Aura = pcall(function()
-    -- Safe Aura
-    local AuraEnabled = false
-    local AuraColor = Color3.fromRGB(0, 255, 120)
-    u914 = function(character)
-        local torso = character and (character:FindFirstChild('UpperTorso') or character:FindFirstChild('Torso'))
-        if not torso then return end
-        local old=torso:FindFirstChild('AuraSafe'); if old then old:Destroy() end
-        local f=Instance.new('Folder'); f.Name='AuraSafe'; f.Parent=torso
-        local light=Instance.new('PointLight'); light.Range=5; light.Brightness=3; light.Color=AuraColor; light.Parent=f
-        local a=Instance.new('Attachment'); a.Parent=f
-        local pe=Instance.new('ParticleEmitter'); pe.Color=ColorSequence.new(AuraColor); pe.Rate=4; pe.Lifetime=NumberRange.new(1); pe.LightEmission=1; pe.Size=NumberSequence.new({NumberSequenceKeypoint.new(0,4.25),NumberSequenceKeypoint.new(0.5,0),NumberSequenceKeypoint.new(1,3.375)}); pe.Speed=NumberRange.new(0.001); pe.Texture='rbxassetid://1075864321'; pe.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(0.5,0),NumberSequenceKeypoint.new(1,1)}); pe.Parent=a
-    end
-    u915 = function(character, auraName)
-        if auraName == 'Safe' and AuraEnabled then u914(character) end
-    end
-    Players.LocalPlayer.CharacterAdded:Connect(function(c) task.wait(0.5); u915(c,'Safe') end)
-    local AuraGroup=VisualsTab
-    AuraGroup:Toggle({Title='Safe',Default=false,Callback=function(v) AuraEnabled=v; local c=Players.LocalPlayer.Character; if v and c then u914(c) elseif c then local t=c:FindFirstChild('UpperTorso') or c:FindFirstChild('Torso'); local a=t and t:FindFirstChild('AuraSafe'); if a then a:Destroy() end end end})
-    AuraGroup:ColorPicker({Title='Aura Color',Default=AuraColor,Callback=function(v) AuraColor=v; if AuraEnabled and Players.LocalPlayer.Character then u914(Players.LocalPlayer.Character) end end})
+        -- ── GUI ────────────────────────────────────────────────
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name          = "AuraViewer"
+        ScreenGui.ResetOnSpawn  = false
+        ScreenGui.Parent        = _player:WaitForChild("PlayerGui")
 
-    end)
-    if not _ok_Aura then warn('[CrystalHub] Visuals Aura failed: '..tostring(_err_Aura)) end
+        -- Toggle button
+        local ToggleBtn = Instance.new("TextButton")
+        ToggleBtn.Size                 = UDim2.new(0, 55, 0, 55)
+        ToggleBtn.Position             = UDim2.new(0.02, 0, 0.88, 0)
+        ToggleBtn.BackgroundColor3     = Color3.fromRGB(0, 0, 0)
+        ToggleBtn.BackgroundTransparency = 0.3
+        ToggleBtn.BorderSizePixel      = 1
+        ToggleBtn.BorderColor3         = Color3.fromRGB(80, 80, 80)
+        ToggleBtn.Text                 = "A"
+        ToggleBtn.TextColor3           = Color3.fromRGB(255, 255, 255)
+        ToggleBtn.TextSize             = 24
+        ToggleBtn.Font                 = Enum.Font.GothamBold
+        ToggleBtn.AutoButtonColor      = false
+        ToggleBtn.ZIndex               = 10
+        ToggleBtn.Parent               = ScreenGui
+        Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 18)
 
-    local _ok_Self, _err_Self = pcall(function()
-    -- Self: character / weapon chams and trail
-    local CharChams=false; local WeaponChams=false; local CharColor=Color3.new(1,1,1); local WeaponColor=Color3.new(1,1,1); local CharMaterial=Enum.Material.ForceField; local WeaponMaterial=Enum.Material.Neon; local TrailEnabled=false; local TrailColor=Color3.new(1,1,1)
-    u916 = function(character)
-        if not character then return end
-        if CharChams then
-            for _,obj in ipairs(character:GetDescendants()) do
-                if obj:IsA('BasePart') and not (obj.Parent and obj.Parent:IsA('Tool')) then obj.Material=CharMaterial; obj.Color=CharColor end
+        -- drag for toggle button
+        local btnDragging, btnDragStart, btnStartPos = false, nil, nil
+        ToggleBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                btnDragging = true; btnDragStart = input.Position; btnStartPos = ToggleBtn.Position
+            end
+        end)
+        _uis.InputChanged:Connect(function(input)
+            if btnDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local d = input.Position - btnDragStart
+                local cam = workspace.CurrentCamera
+                local nx, ny = btnStartPos.X.Offset + d.X, btnStartPos.Y.Offset + d.Y
+                if cam then
+                    local s = cam.ViewportSize; local b = ToggleBtn.AbsoluteSize
+                    nx = math.clamp(nx, 0, s.X - b.X); ny = math.clamp(ny, 0, s.Y - b.Y)
+                end
+                ToggleBtn.Position = UDim2.new(0, nx, 0, ny)
+            end
+        end)
+        _uis.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                btnDragging = false; btnDragStart = nil
+            end
+        end)
+        ToggleBtn.MouseEnter:Connect(function()
+            _tween:Create(ToggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0,60,0,60)}):Play()
+            ToggleBtn.BackgroundTransparency = 0.1
+        end)
+        ToggleBtn.MouseLeave:Connect(function()
+            _tween:Create(ToggleBtn, TweenInfo.new(0.15), {Size = UDim2.new(0,55,0,55)}):Play()
+            ToggleBtn.BackgroundTransparency = 0.3
+        end)
+
+        -- Menu
+        local Menu = Instance.new("Frame")
+        Menu.Size                   = UDim2.new(0, 280, 0, 350)
+        Menu.Position               = UDim2.new(0.5, -140, 0.5, -175)
+        Menu.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
+        Menu.BackgroundTransparency = 0.5
+        Menu.BorderSizePixel        = 1
+        Menu.BorderColor3           = Color3.fromRGB(60, 60, 60)
+        Menu.ClipsDescendants       = true
+        Menu.Visible                = false
+        Menu.Parent                 = ScreenGui
+        Instance.new("UICorner", Menu).CornerRadius = UDim.new(0, 16)
+
+        -- drag menu
+        local menuDragging, menuDragStart, menuStartPos = false, nil, nil
+        Menu.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                local pos = input.Position; local mp = Menu.AbsolutePosition
+                if pos.X >= mp.X and pos.X <= mp.X+280 and pos.Y >= mp.Y and pos.Y <= mp.Y+35 then
+                    menuDragging = true; menuDragStart = pos; menuStartPos = Menu.Position
+                end
+            end
+        end)
+        _uis.InputChanged:Connect(function(input)
+            if menuDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local d = input.Position - menuDragStart
+                Menu.Position = UDim2.new(0, menuStartPos.X.Offset+d.X, 0, menuStartPos.Y.Offset+d.Y)
+            end
+        end)
+        _uis.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                menuDragging = false; menuDragStart = nil
+            end
+        end)
+
+        -- Header
+        local Header = Instance.new("Frame")
+        Header.Size = UDim2.new(1,0,0,35); Header.BackgroundTransparency = 1; Header.Parent = Menu
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1,-40,1,0); Title.Position = UDim2.new(0,20,0,0)
+        Title.BackgroundTransparency = 1; Title.Text = "AURA SELECTOR"
+        Title.TextColor3 = Color3.fromRGB(255,255,255); Title.TextSize = 14
+        Title.Font = Enum.Font.GothamBold; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Header
+
+        local CloseBtn = Instance.new("TextButton")
+        CloseBtn.Size = UDim2.new(0,26,0,26); CloseBtn.Position = UDim2.new(1,-33,0.5,-13)
+        CloseBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); CloseBtn.BackgroundTransparency = 0.3
+        CloseBtn.BorderSizePixel = 1; CloseBtn.BorderColor3 = Color3.fromRGB(80,80,80)
+        CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.Text = "X"
+        CloseBtn.TextColor3 = Color3.fromRGB(255,255,255); CloseBtn.TextSize = 14; CloseBtn.Parent = Header
+        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+        local StatusLabel = Instance.new("TextLabel")
+        StatusLabel.Size = UDim2.new(0,100,0,20); StatusLabel.Position = UDim2.new(0,8,0,38)
+        StatusLabel.BackgroundTransparency = 1; StatusLabel.Text = "Selected: 0/8"
+        StatusLabel.TextColor3 = Color3.fromRGB(180,180,180); StatusLabel.TextSize = 10
+        StatusLabel.Font = Enum.Font.GothamMedium; StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+        StatusLabel.Parent = Menu
+
+        local AllBtn = Instance.new("TextButton")
+        AllBtn.Size = UDim2.new(0,65,0,22); AllBtn.Position = UDim2.new(1,-75,0,38)
+        AllBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); AllBtn.BackgroundTransparency = 0.3
+        AllBtn.BorderSizePixel = 1; AllBtn.BorderColor3 = Color3.fromRGB(80,80,80)
+        AllBtn.Text = "ALL"; AllBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        AllBtn.TextSize = 10; AllBtn.Font = Enum.Font.GothamBold; AllBtn.Parent = Menu
+        Instance.new("UICorner", AllBtn).CornerRadius = UDim.new(0, 4)
+
+        -- ScrollFrame
+        local ScrollFrame = Instance.new("ScrollingFrame")
+        ScrollFrame.Size = UDim2.new(1,-16,0,160); ScrollFrame.Position = UDim2.new(0,8,0,65)
+        ScrollFrame.BackgroundTransparency = 1; ScrollFrame.BorderSizePixel = 0
+        ScrollFrame.ScrollBarThickness = 3; ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(80,80,80)
+        ScrollFrame.CanvasSize = UDim2.new(0,0,0,0); ScrollFrame.Parent = Menu
+
+        local ItemsContainer = Instance.new("Frame")
+        ItemsContainer.Size = UDim2.new(1,0,0,0); ItemsContainer.BackgroundTransparency = 1
+        ItemsContainer.Parent = ScrollFrame
+
+        -- Color panel
+        local ColorPanel = Instance.new("Frame")
+        ColorPanel.Size = UDim2.new(1,-16,0,55); ColorPanel.Position = UDim2.new(0,8,1,-62)
+        ColorPanel.BackgroundColor3 = Color3.fromRGB(0,0,0); ColorPanel.BackgroundTransparency = 0.4
+        ColorPanel.BorderSizePixel = 1; ColorPanel.BorderColor3 = Color3.fromRGB(60,60,60); ColorPanel.Parent = Menu
+        Instance.new("UICorner", ColorPanel).CornerRadius = UDim.new(0, 6)
+
+        local ColorLabel = Instance.new("TextLabel")
+        ColorLabel.Size = UDim2.new(1,0,0,14); ColorLabel.BackgroundTransparency = 1
+        ColorLabel.Text = "COLOR"; ColorLabel.TextColor3 = Color3.fromRGB(180,180,180)
+        ColorLabel.TextSize = 9; ColorLabel.Font = Enum.Font.GothamBold
+        ColorLabel.TextXAlignment = Enum.TextXAlignment.Center; ColorLabel.Parent = ColorPanel
+
+        -- ── Core aura helpers ──────────────────────────────────
+        local function clearAura()
+            for _, p in ipairs(aura_particles) do pcall(function() p:Destroy() end) end
+            aura_particles = {}
+        end
+
+        local function loadAura(name)
+            if aura_cache[name] then return aura_cache[name] end
+            local id = aura_ids[name]; if not id then return nil end
+            local ok, res = pcall(game.GetObjects, game, "rbxassetid://"..id)
+            if ok and res and res[1] then aura_cache[name] = res[1]; return res[1] end
+        end
+
+        local function colorAura(model, color)
+            local seq = ColorSequence.new(color)
+            for _, d in ipairs(model:GetDescendants()) do
+                if d:IsA("PointLight") then d.Color = color
+                elseif d:IsA("ParticleEmitter") or d:IsA("Beam") or d:IsA("Trail") then d.Color = seq end
             end
         end
-        if WeaponChams then
-            local tool=character:FindFirstChildOfClass('Tool')
-            if tool then for _,obj in ipairs(tool:GetDescendants()) do if obj:IsA('BasePart') then obj.Material=WeaponMaterial; obj.Color=WeaponColor end end end
+
+        local function applyAura()
+            clearAura()
+            local char = _player.Character; if not char then return end
+            local real_char = char
+            if char.Parent ~= workspace then
+                real_char = nil
+                for _, obj in ipairs(workspace:GetChildren()) do
+                    if obj:IsA("Model") and obj.Name == _player.Name then
+                        local hrp = obj:FindFirstChild("HumanoidRootPart")
+                        if hrp and hrp:IsA("BasePart") then real_char = obj; break end
+                    end
+                end
+            end
+            if not real_char then return end
+            local count = 0
+            for _, name in ipairs(aura_order) do
+                if selected_auras[name] then
+                    count = count + 1
+                    local m = loadAura(name)
+                    if m then
+                        colorAura(m, aura_color)
+                        local cl = m:Clone()
+                        for _, part in ipairs(cl:GetChildren()) do
+                            local target = real_char:FindFirstChild(part.Name)
+                            if target and target:IsA("BasePart") then
+                                for _, child in ipairs(part:GetChildren()) do
+                                    child.Parent = target; table.insert(aura_particles, child)
+                                end
+                            end
+                        end
+                        cl:Destroy()
+                    end
+                end
+            end
+            StatusLabel.Text = "Selected: "..count.."/8"
         end
+
+        local function updateAuraColor()
+            aura_color = Color3.fromRGB(colorValues.R, colorValues.G, colorValues.B)
+            if aura_active then applyAura() end
+        end
+
+        -- Color sliders
+        local function createColorSlider(parent, yPos, colorName, defaultVal)
+            local frame = Instance.new("Frame")
+            frame.Size = UDim2.new(1,-6,0,14); frame.Position = UDim2.new(0,3,0,yPos)
+            frame.BackgroundTransparency = 1; frame.Parent = parent
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0,12,1,0); label.BackgroundTransparency = 1
+            label.Text = colorName; label.TextColor3 = Color3.fromRGB(255,255,255)
+            label.TextSize = 8; label.Font = Enum.Font.GothamBold; label.Parent = frame
+
+            local bg = Instance.new("Frame")
+            bg.Size = UDim2.new(1,-45,1,0); bg.Position = UDim2.new(0,14,0,0)
+            bg.BackgroundColor3 = Color3.fromRGB(40,40,40); bg.BorderSizePixel = 0; bg.Parent = frame
+            Instance.new("UICorner", bg).CornerRadius = UDim.new(1,0)
+
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new(defaultVal/255,0,1,0)
+            fill.BackgroundColor3 = colorName=="R" and Color3.fromRGB(255,80,80) or colorName=="G" and Color3.fromRGB(80,255,80) or Color3.fromRGB(80,80,255)
+            fill.BorderSizePixel = 0; fill.Parent = bg
+            Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
+
+            local valLbl = Instance.new("TextLabel")
+            valLbl.Size = UDim2.new(0,26,1,0); valLbl.Position = UDim2.new(1,-28,0,0)
+            valLbl.BackgroundTransparency = 1; valLbl.Text = tostring(defaultVal)
+            valLbl.TextColor3 = Color3.fromRGB(200,200,200); valLbl.TextSize = 8
+            valLbl.Font = Enum.Font.Gotham; valLbl.Parent = frame
+
+            local function updateSlider(mouseX)
+                local ax, aw = bg.AbsolutePosition.X, bg.AbsoluteSize.X
+                if aw <= 0 then return end
+                local x = math.clamp((mouseX-ax)/aw, 0, 1)
+                colorValues[colorName] = math.round(x*255)
+                fill.Size = UDim2.new(x,0,1,0)
+                valLbl.Text = tostring(colorValues[colorName])
+                updateAuraColor()
+            end
+
+            bg.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    updateSlider(input.Position.X)
+                    local conn
+                    conn = _uis.InputChanged:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+                            updateSlider(i.Position.X)
+                        end
+                    end)
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then conn:Disconnect() end
+                    end)
+                end
+            end)
+        end
+
+        createColorSlider(ColorPanel, 14, "R", 133)
+        createColorSlider(ColorPanel, 29, "G", 220)
+        createColorSlider(ColorPanel, 44, "B", 255)
+
+        -- Aura buttons
+        local auraButtons = {}
+        local function createAuraButton(aura_name, index)
+            local row = Instance.new("Frame")
+            row.Size = UDim2.new(1,0,0,28); row.Position = UDim2.new(0,0,0,index*31)
+            row.BackgroundTransparency = 1; row.Parent = ItemsContainer
+
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-35,1,0); btn.Position = UDim2.new(0,0,0,0)
+            btn.BackgroundColor3 = Color3.fromRGB(20,20,20); btn.BackgroundTransparency = 0.3
+            btn.BorderSizePixel = 1; btn.BorderColor3 = Color3.fromRGB(60,60,60)
+            btn.Text = aura_name:upper(); btn.TextColor3 = Color3.fromRGB(200,200,200)
+            btn.TextSize = 10; btn.Font = Enum.Font.GothamMedium
+            btn.TextXAlignment = Enum.TextXAlignment.Left; btn.Parent = row
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+            local checkbox = Instance.new("TextButton")
+            checkbox.Size = UDim2.new(0,20,0,20); checkbox.Position = UDim2.new(1,-26,0.5,-10)
+            checkbox.BackgroundColor3 = Color3.fromRGB(30,30,30); checkbox.BackgroundTransparency = 0.3
+            checkbox.BorderSizePixel = 1; checkbox.BorderColor3 = Color3.fromRGB(70,70,70)
+            checkbox.Text = ""; checkbox.TextColor3 = Color3.fromRGB(255,255,255)
+            checkbox.TextSize = 12; checkbox.Font = Enum.Font.GothamBold; checkbox.Parent = row
+            Instance.new("UICorner", checkbox).CornerRadius = UDim.new(0,4)
+
+            local function updateCheckbox()
+                if selected_auras[aura_name] then
+                    checkbox.BackgroundColor3 = Color3.fromRGB(80,180,80); checkbox.BackgroundTransparency = 0.1; checkbox.Text = "✓"
+                    btn.BackgroundColor3 = Color3.fromRGB(30,30,40); btn.BackgroundTransparency = 0.15
+                    btn.BorderColor3 = Color3.fromRGB(80,150,255); btn.TextColor3 = Color3.fromRGB(255,255,255)
+                else
+                    checkbox.BackgroundColor3 = Color3.fromRGB(30,30,30); checkbox.BackgroundTransparency = 0.3; checkbox.Text = ""
+                    btn.BackgroundColor3 = Color3.fromRGB(20,20,20); btn.BackgroundTransparency = 0.3
+                    btn.BorderColor3 = Color3.fromRGB(60,60,60); btn.TextColor3 = Color3.fromRGB(200,200,200)
+                end
+                if aura_active then applyAura() end
+            end
+
+            local function toggle()
+                selected_auras[aura_name] = not selected_auras[aura_name]; updateCheckbox()
+            end
+
+            btn.MouseButton1Click:Connect(toggle); btn.TouchTap:Connect(toggle)
+            checkbox.MouseButton1Click:Connect(toggle); checkbox.TouchTap:Connect(toggle)
+            auraButtons[aura_name] = {btn=btn, checkbox=checkbox, update=updateCheckbox}
+            updateCheckbox()
+        end
+
+        for i, name in ipairs(aura_order) do createAuraButton(name, i-1) end
+
+        -- Container sizing
+        local count = #aura_order; local height = count*31+10
+        ItemsContainer.Size = UDim2.new(1,0,0,height); ScrollFrame.CanvasSize = UDim2.new(0,0,0,height)
+
+        -- ALL button
+        local allOn = false
+        local function toggleAll()
+            allOn = not allOn
+            for _, name in ipairs(aura_order) do selected_auras[name] = allOn end
+            for name, data in pairs(auraButtons) do data.update() end
+            AllBtn.Text = allOn and "ALL" or "NONE"
+            if aura_active then applyAura() end
+        end
+        AllBtn.MouseButton1Click:Connect(toggleAll); AllBtn.TouchTap:Connect(toggleAll)
+
+        -- Toggle menu
+        local menuVisible = false
+        local function toggleMenu()
+            menuVisible = not menuVisible; Menu.Visible = menuVisible
+            if menuVisible then
+                Menu.Position = UDim2.new(0.5,-140,0.5,-175)
+                if not aura_active then aura_active = true; applyAura() end
+            end
+        end
+        CloseBtn.MouseButton1Click:Connect(toggleMenu); CloseBtn.TouchTap:Connect(toggleMenu)
+        ToggleBtn.MouseButton1Click:Connect(toggleMenu); ToggleBtn.TouchTap:Connect(toggleMenu)
+
+        _uis.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.KeyCode == Enum.KeyCode.RightAlt then toggleMenu() end
+        end)
+
+        _player.CharacterAdded:Connect(function()
+            task.wait(0.5); if aura_active then applyAura() end
+        end)
+
+        task.wait(0.5); toggleMenu()
     end
-    u917 = function(character) task.wait(0.5); u916(character); character.ChildAdded:Connect(function(c) if c:IsA('Tool') then task.wait(); u916(character) end end) end
-    u918 = function(enabled)
-        local c=Players.LocalPlayer.Character; if not c then return end
-        local hrp=c:FindFirstChild('HumanoidRootPart'); if not hrp then return end
-        local old=hrp:FindFirstChild('CrystalHubTrail'); if old then old:Destroy() end
-        if not enabled then return end
-        local a0=Instance.new('Attachment'); a0.Name='TrailA'; a0.Position=Vector3.new(0,1,0); a0.Parent=hrp
-        local a1=Instance.new('Attachment'); a1.Name='TrailB'; a1.Position=Vector3.new(0,-1,0); a1.Parent=hrp
-        local tr=Instance.new('Trail'); tr.Name='CrystalHubTrail'; tr.Attachment0=a0; tr.Attachment1=a1; tr.Color=ColorSequence.new(TrailColor); tr.Lifetime=1.6; tr.Parent=hrp
-    end
-    Players.LocalPlayer.CharacterAdded:Connect(u917)
-    if Players.LocalPlayer.Character then task.spawn(u917,Players.LocalPlayer.Character) end
-    local SelfGroup=VisualsTab
-    SelfGroup:Toggle({Title='Character Chams',Default=false,Callback=function(v) CharChams=v; u916(Players.LocalPlayer.Character) end})
-    SelfGroup:ColorPicker({Title='Character Color',Default=CharColor,Callback=function(v) CharColor=v; u916(Players.LocalPlayer.Character) end})
-    SelfGroup:Dropdown({Title='Character Material',Options={'ForceField','Neon'},Default='ForceField',Callback=function(v) CharMaterial=(v=='Neon' and Enum.Material.Neon or Enum.Material.ForceField); u916(Players.LocalPlayer.Character) end})
-    SelfGroup:Toggle({Title='Weapon Chams',Default=false,Callback=function(v) WeaponChams=v; u916(Players.LocalPlayer.Character) end})
-    SelfGroup:ColorPicker({Title='Weapon Color',Default=WeaponColor,Callback=function(v) WeaponColor=v; u916(Players.LocalPlayer.Character) end})
-    SelfGroup:Dropdown({Title='Weapon Material',Options={'Neon','ForceField'},Default='Neon',Callback=function(v) WeaponMaterial=(v=='ForceField' and Enum.Material.ForceField or Enum.Material.Neon); u916(Players.LocalPlayer.Character) end})
-    SelfGroup:Toggle({Title='Character Trail',Default=false,Callback=function(v) TrailEnabled=v; u918(v) end})
-    SelfGroup:ColorPicker({Title='Trail Color',Default=TrailColor,Callback=function(v) TrailColor=v; u918(TrailEnabled) end})
-
-    end)
-    if not _ok_Self then warn('[CrystalHub] Visuals Self failed: '..tostring(_err_Self)) end
-
-    local _ok_Bullet, _err_Bullet = pcall(function()
-    -- Bullet tracer: visual function and a safe ShootGun hook.
-    local BulletTracerEnabled=false; local BulletTracerColor=Color3.fromRGB(255,255,255); local BulletTracerSize=0.4; local BulletTracerTransparency=0; local BulletTracerLife=2; local BulletTracerTexture='rbxassetid://12781852245'
-    u919 = function(startPos,endPos)
-        if not BulletTracerEnabled or typeof(startPos)~='Vector3' or typeof(endPos)~='Vector3' then return end
-        local p0=Instance.new('Part'); p0.Anchored=true; p0.CanCollide=false; p0.Transparency=1; p0.Size=Vector3.new(.1,.1,.1); p0.CFrame=CFrame.new(startPos); p0.Parent=workspace
-        local p1=p0:Clone(); p1.CFrame=CFrame.new(endPos); p1.Parent=workspace
-        local a0=Instance.new('Attachment',p0); local a1=Instance.new('Attachment',p1)
-        local beam=Instance.new('Beam'); beam.Attachment0=a0; beam.Attachment1=a1; beam.Texture=BulletTracerTexture; beam.Color=ColorSequence.new(BulletTracerColor); beam.Width0=BulletTracerSize; beam.Width1=BulletTracerSize; beam.Transparency=NumberSequence.new(BulletTracerTransparency); beam.FaceCamera=true; beam.Parent=p0
-        task.delay(BulletTracerLife,function() if p0 then p0:Destroy() end; if p1 then p1:Destroy() end end)
-    end
-    local BulletGroup=VisualsTab
-    BulletGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) BulletTracerEnabled=v end})
-    BulletGroup:ColorPicker({Title='Color',Default=BulletTracerColor,Callback=function(v) BulletTracerColor=v end})
-    BulletGroup:Dropdown({Title='Texture',Options={'Beam','Lightning','Heartrate','Chain','Glitch','Swirl'},Default='Beam',Callback=function(v) local ids={Beam='12781852245',Lightning='11481682774',Heartrate='1230763696',Chain='1033714',Glitch='1154459643',Swirl='1049817702'}; BulletTracerTexture='rbxassetid://'..(ids[v] or ids.Beam) end})
-    BulletGroup:Button({Title='Size / Transparency / Lifetime',Callback=function() v25('Size',0.1,3,BulletTracerSize,0.1,function(v) BulletTracerSize=v end,function() BulletTracerSize=0.4 end); v25('Transparency',0,1,BulletTracerTransparency,0.05,function(v) BulletTracerTransparency=v end,function() BulletTracerTransparency=0 end); v25('Lifetime',0.2,5,BulletTracerLife,0.1,function(v) BulletTracerLife=v end,function() BulletTracerLife=2 end) end})
-
-    end)
-    if not _ok_Bullet then warn('[CrystalHub] Visuals Bullet failed: '..tostring(_err_Bullet)) end
-
-    local _ok_HUD, _err_HUD = pcall(function()
-    -- HUD changer (same target GUI/function as the source, but guarded so missing UI does not break the tab).
-    local HudHP=false; local HudArmor=false; local HudEnergy=false; local HudHPColor=Color3.fromRGB(240,8,209); local HudArmorColor=Color3.fromRGB(96,8,238); local HudEnergyColor=Color3.fromRGB(196,10,243)
-    u920 = function()
-        local pg=Players.LocalPlayer:FindFirstChildOfClass('PlayerGui'); local main=pg and pg:FindFirstChild('MainScreenGui'); local bar=main and main:FindFirstChild('Bar'); if not bar then return end
-        local function apply(name,on,color) local g=bar:FindFirstChild(name); if on and g then local t=g:FindFirstChild('TextLabel'); local b=g:FindFirstChild('bar'); if t then t.Text=name end; if b and b:IsA('GuiObject') then b.BackgroundColor3=color end end end
-        apply('HP',HudHP,HudHPColor); apply('Armor',HudArmor,HudArmorColor); apply('Energy',HudEnergy,HudEnergyColor)
-    end
-    local HudGroup=VisualsTab
-    HudGroup:Toggle({Title='Customize Health',Default=false,Callback=function(v) HudHP=v; u920() end}); HudGroup:ColorPicker({Title='Health Color',Default=HudHPColor,Callback=function(v) HudHPColor=v; u920() end})
-    HudGroup:Toggle({Title='Customize Armor',Default=false,Callback=function(v) HudArmor=v; u920() end}); HudGroup:ColorPicker({Title='Armor Color',Default=HudArmorColor,Callback=function(v) HudArmorColor=v; u920() end})
-    HudGroup:Toggle({Title='Customize Energy',Default=false,Callback=function(v) HudEnergy=v; u920() end}); HudGroup:ColorPicker({Title='Energy Color',Default=HudEnergyColor,Callback=function(v) HudEnergyColor=v; u920() end})
-
-    end)
-    if not _ok_HUD then warn('[CrystalHub] Visuals HUD failed: '..tostring(_err_HUD)) end
-
-    local _ok_Crosshair, _err_Crosshair = pcall(function()
-    -- Crosshair
-    local CrosshairEnabled=false; local CrosshairText=true; local CrosshairRainbow=false; local CrosshairColor=Color3.new(1,1,1); local CrosshairGui; local CrosshairContainer; local CrosshairLines={}; local CrosshairLabel; local CrosshairSpeed=0.8
-    u921 = function(parent,size,pos,color) local f=Instance.new('Frame'); f.Size=size; f.Position=pos; f.BackgroundColor3=color; f.BorderSizePixel=0; f.Parent=parent; local st=Instance.new('UIStroke',f); st.Color=Color3.new(0,0,0); st.Thickness=1; return f end
-    u922 = function(parent,text,pos,color) local l=Instance.new('TextLabel'); l.Text=text; l.Position=pos; l.TextColor3=color; l.Font=Enum.Font.Arcade; l.TextScaled=true; l.BackgroundTransparency=1; l.Size=UDim2.new(0,150,0,23); l.Parent=parent; local st=Instance.new('UIStroke',l); st.Color=Color3.new(0,0,0); return l end
-    u923 = function() if CrosshairGui then CrosshairGui:Destroy(); CrosshairGui=nil end end
-    u924 = function() u923(); local pg=Players.LocalPlayer:FindFirstChildOfClass('PlayerGui'); if not pg then return end; CrosshairGui=Instance.new('ScreenGui'); CrosshairGui.Name='CrystalHubCrosshair'; CrosshairGui.ResetOnSpawn=false; CrosshairGui.Parent=pg; CrosshairContainer=Instance.new('Frame'); CrosshairContainer.Size=UDim2.new(0,25,0,25); CrosshairContainer.AnchorPoint=Vector2.new(.5,.5); CrosshairContainer.BackgroundTransparency=1; CrosshairContainer.Parent=CrosshairGui; CrosshairLines.top=u921(CrosshairContainer,UDim2.new(0,3,0,25),UDim2.new(.5,-1.5,0,0),CrosshairColor); CrosshairLines.bottom=u921(CrosshairContainer,UDim2.new(0,3,0,25),UDim2.new(.5,-1.5,1,-25),CrosshairColor); CrosshairLines.left=u921(CrosshairContainer,UDim2.new(0,25,0,3),UDim2.new(0,0,.5,-1.5),CrosshairColor); CrosshairLines.right=u921(CrosshairContainer,UDim2.new(0,25,0,3),UDim2.new(1,-25,.5,-1.5),CrosshairColor); CrosshairLabel=u922(CrosshairGui,'Matcha.cc',UDim2.new(0,0,0,0),CrosshairColor); CrosshairLabel.Visible=CrosshairText end
-    u925 = function() if CrosshairEnabled then u924() else u923() end end
-    u926 = function() if not CrosshairContainer then return end; local m=Players.LocalPlayer:GetMouse(); CrosshairContainer.Position=UDim2.new(0,m.X,0,m.Y); if CrosshairLabel then CrosshairLabel.Position=UDim2.new(0,m.X-70,0,m.Y+50); CrosshairLabel.Visible=CrosshairText end; local c=CrosshairRainbow and Color3.fromHSV((tick()%5)/5,1,1) or CrosshairColor; for _,f in pairs(CrosshairLines) do f.BackgroundColor3=c end end
-    RunService.RenderStepped:Connect(u926)
-    local CrossGroup=VisualsTab
-    CrossGroup:Toggle({Title='Enabled',Default=false,Callback=function(v) CrosshairEnabled=v; u925() end})
-    CrossGroup:Toggle({Title='Text',Default=true,Callback=function(v) CrosshairText=v end})
-    CrossGroup:Toggle({Title='Rainbow',Default=false,Callback=function(v) CrosshairRainbow=v end})
-    CrossGroup:ColorPicker({Title='Color',Default=CrosshairColor,Callback=function(v) CrosshairColor=v end})
-    CrossGroup:Button({Title='Spin Speed',Callback=function() v25('Spin Speed',0.1,2,CrosshairSpeed,0.1,function(v) CrosshairSpeed=v end,function() CrosshairSpeed=.8 end) end})
-
-    end)
-    if not _ok_Crosshair then warn('[CrystalHub] Visuals Crosshair failed: '..tostring(_err_Crosshair)) end
-
-    local _ok_RainSnow, _err_RainSnow = pcall(function()
-    -- Rain / Snow
-    local RainEnabled=false; local SnowEnabled=false; local RainColor=Color3.new(1,1,1); local SnowColor=Color3.new(1,1,1); local RainRate=1000; local SnowRate=100; local RainSpeed=100; local SnowSpeed=30; local RainPart; local SnowPart; local RainConn; local SnowConn
-    u927 = function(kind)
-        local old=(kind=='rain' and RainPart or SnowPart); if old then old:Destroy() end
-        local part=Instance.new('Part'); part.Name=(kind=='rain' and 'CrystalHubRain' or 'CrystalHubSnow'); part.Size=Vector3.new(52,.1,52); part.Anchored=true; part.CanCollide=false; part.Transparency=1; part.Parent=workspace
-        local pe=Instance.new('ParticleEmitter'); pe.Color=ColorSequence.new(kind=='rain' and RainColor or SnowColor); pe.Rate=(kind=='rain' and RainRate or SnowRate); pe.Speed=NumberRange.new(kind=='rain' and RainSpeed or SnowSpeed); pe.Lifetime=NumberRange.new(2,5); pe.EmissionDirection=Enum.NormalId.Bottom; pe.SpreadAngle=Vector2.new(90,90); pe.Texture=(kind=='rain' and 'rbxassetid://12781852245' or 'rbxassetid://129110349'); pe.Parent=part
-        if kind=='rain' then RainPart=part else SnowPart=part end
-    end
-    u928 = function() if RainConn then RainConn:Disconnect(); RainConn=nil end; if SnowConn then SnowConn:Disconnect(); SnowConn=nil end; if RainPart then RainPart:Destroy(); RainPart=nil end; if SnowPart then SnowPart:Destroy(); SnowPart=nil end end
-    local RainGroup=VisualsTab
-    RainGroup:Toggle({Title='Rain Enabled',Default=false,Callback=function(v) RainEnabled=v; if RainConn then RainConn:Disconnect(); RainConn=nil end; if v then u927('rain'); RainConn=RunService.Heartbeat:Connect(function() if RainPart and CurrentCamera then RainPart.CFrame=CFrame.new(CurrentCamera.CFrame.Position+Vector3.new(0,30,0)) end end) elseif RainPart then RainPart:Destroy(); RainPart=nil end end})
-    RainGroup:ColorPicker({Title='Rain Color',Default=RainColor,Callback=function(v) RainColor=v; if RainEnabled then u927('rain') end end})
-    RainGroup:Toggle({Title='Snow Enabled',Default=false,Callback=function(v) SnowEnabled=v; if SnowConn then SnowConn:Disconnect(); SnowConn=nil end; if v then u927('snow'); SnowConn=RunService.Heartbeat:Connect(function() if SnowPart and CurrentCamera then SnowPart.CFrame=CFrame.new(CurrentCamera.CFrame.Position+Vector3.new(0,5,0)) end end) elseif SnowPart then SnowPart:Destroy(); SnowPart=nil end end})
-    RainGroup:ColorPicker({Title='Snow Color',Default=SnowColor,Callback=function(v) SnowColor=v; if SnowEnabled then u927('snow') end end})
-    RainGroup:Button({Title='Rain/Snow Amount & Speed',Callback=function() v25('Rain Amount',1,10000,RainRate,10,function(v) RainRate=v; if RainEnabled then u927('rain') end end,function() RainRate=1000 end); v25('Rain Speed',10,1000,RainSpeed,10,function(v) RainSpeed=v; if RainEnabled then u927('rain') end end,function() RainSpeed=100 end); v25('Snow Amount',1,1000,SnowRate,10,function(v) SnowRate=v; if SnowEnabled then u927('snow') end end,function() SnowRate=100 end); v25('Snow Speed',1,1000,SnowSpeed,10,function(v) SnowSpeed=v; if SnowEnabled then u927('snow') end end,function() SnowSpeed=30 end) end})
-
-    end)
-    if not _ok_RainSnow then warn('[CrystalHub] Visuals RainSnow failed: '..tostring(_err_RainSnow)) end
-
-    local _ok_World, _err_World = pcall(function()
-    -- World / Lighting / Skybox
-    local WorldOriginal={Ambient=Lighting.Ambient,Outdoor=Lighting.OutdoorAmbient,FogColor=Lighting.FogColor,FogStart=Lighting.FogStart,FogEnd=Lighting.FogEnd,Brightness=Lighting.Brightness,ClockTime=Lighting.ClockTime,GlobalShadows=Lighting.GlobalShadows}
-    local WorldAmbient=WorldOriginal.Ambient; local WorldOutdoor=WorldOriginal.Outdoor; local WorldFog=WorldOriginal.FogColor; local WorldFogStart=WorldOriginal.FogStart; local WorldFogEnd=WorldOriginal.FogEnd; local WorldBrightness=WorldOriginal.Brightness; local WorldClock=WorldOriginal.ClockTime; local WorldSky
-    u929 = function(name)
-        if WorldSky then WorldSky:Destroy(); WorldSky=nil end
-        if name=='Roblox Default' then return end
-        local ids={['Blue Space']={'rbxassetid://159454299','rbxassetid://159454296','rbxassetid://159454293','rbxassetid://159454286','rbxassetid://159454300','rbxassetid://159454288'},['Snow']={'rbxassetid://160174370','rbxassetid://160174371','rbxassetid://160174372','rbxassetid://160174373','rbxassetid://160174374','rbxassetid://160174375'},['Sunset']={'rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758','rbxassetid://264909758'}}
-        local x=ids[name] or ids['Blue Space']; WorldSky=Instance.new('Sky'); WorldSky.Name='CrystalHubCustomSky'; WorldSky.SkyboxBk=x[1]; WorldSky.SkyboxDn=x[2]; WorldSky.SkyboxFt=x[3]; WorldSky.SkyboxLf=x[4]; WorldSky.SkyboxRt=x[5]; WorldSky.SkyboxUp=x[6]; WorldSky.Parent=Lighting
-    end
-    local WorldGroup=VisualsTab
-    WorldGroup:Toggle({Title='Custom Ambient',Default=false,Callback=function(v) Lighting.Ambient=v and WorldAmbient or WorldOriginal.Ambient end}); WorldGroup:ColorPicker({Title='Ambient Color',Default=WorldAmbient,Callback=function(v) WorldAmbient=v end})
-    WorldGroup:Toggle({Title='Custom Outdoor Ambient',Default=false,Callback=function(v) Lighting.OutdoorAmbient=v and WorldOutdoor or WorldOriginal.Outdoor end}); WorldGroup:ColorPicker({Title='Outdoor Color',Default=WorldOutdoor,Callback=function(v) WorldOutdoor=v end})
-    WorldGroup:Toggle({Title='Custom Fog',Default=false,Callback=function(v) if v then Lighting.FogColor=WorldFog; Lighting.FogStart=WorldFogStart; Lighting.FogEnd=WorldFogEnd else Lighting.FogColor=WorldOriginal.FogColor; Lighting.FogStart=WorldOriginal.FogStart; Lighting.FogEnd=WorldOriginal.FogEnd end end}); WorldGroup:ColorPicker({Title='Fog Color',Default=WorldFog,Callback=function(v) WorldFog=v end})
-    WorldGroup:Button({Title='Fog Start / End',Callback=function() v25('Fog Start',0,1000,WorldFogStart,1,function(v) WorldFogStart=v; Lighting.FogStart=v end,function() WorldFogStart=WorldOriginal.FogStart end); v25('Fog End',0,1000,WorldFogEnd,1,function(v) WorldFogEnd=v; Lighting.FogEnd=v end,function() WorldFogEnd=WorldOriginal.FogEnd end) end})
-    WorldGroup:Toggle({Title='Custom Brightness',Default=false,Callback=function(v) Lighting.Brightness=v and WorldBrightness or WorldOriginal.Brightness end}); WorldGroup:Button({Title='Brightness / Clock Time',Callback=function() v25('Brightness',0,10,WorldBrightness,0.1,function(v) WorldBrightness=v; Lighting.Brightness=v end,function() WorldBrightness=WorldOriginal.Brightness end); v25('Clock Time',0,24,WorldClock,0.1,function(v) WorldClock=v; Lighting.ClockTime=v end,function() WorldClock=WorldOriginal.ClockTime end) end})
-    WorldGroup:Toggle({Title='Global Shadows',Default=WorldOriginal.GlobalShadows,Callback=function(v) Lighting.GlobalShadows=v end})
-    WorldGroup:Dropdown({Title='Skybox',Options={'Roblox Default','Blue Space','Snow','Sunset'},Default='Roblox Default',Callback=function(v) u929(v) end})
-    WorldGroup:Button({Title='Remove Custom Skybox',Callback=function() if WorldSky then WorldSky:Destroy(); WorldSky=nil end end})
-
-    end)
-    if not _ok_World then warn('[CrystalHub] Visuals World failed: '..tostring(_err_World)) end
-
-    local _ok_Stomp, _err_Stomp = pcall(function()
-    -- Stomp Effects: use the source module when the host script provides it.
-    local StompGroup=VisualsTab
-    local StompOn=false; local StompEffect='Thanos'
-    StompGroup:Toggle({Title='Stompeffects',Default=false,Callback=function(v) StompOn=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(v) end) end end})
-    StompGroup:Dropdown({Title='Select stomp effect',Options={'Spirit','RoadRoller','Rings','BlackHole','Charm','Thanos','Afterslash'},Default='Thanos',Callback=function(v) StompEffect=v; if Modules and Modules.StompEffects then pcall(function() Modules:StompEffects(StompOn) end) end end})
-    end)
-    end
-    if not _ok_Stomp then warn('[CrystalHub] Visuals Stomp failed: '..tostring(_err_Stomp)) end
-
-
-    local _visualsOk, _visualsErr = pcall(initVisuals)
-    if not _visualsOk then
-        warn('[CrystalHub] Visuals init failed: ' .. tostring(_visualsErr))
-    end
+    -- ============================================================
+    --  END AURA SYSTEM
+    -- ============================================================
 
     v301:Paragraph({
         Title = 'Auto-Loaded Buttons',
